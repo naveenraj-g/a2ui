@@ -1,3 +1,22 @@
+/**
+ * A2UIChat — the main chat interface for the workflow system.
+ *
+ * Responsibilities:
+ *   - Sends user messages to POST /api/workflow, which calls the external AI
+ *     agent and returns the first step of the selected workflow.
+ *   - Renders each workflow step as an A2UI component tree (via Renderer) when
+ *     a UI schema is available, or as a plain text description when it is not.
+ *   - Listens for "dispatch" events fired by A2UI forms. When a form submits,
+ *     it posts to POST /api/workflow/submit (direct FHIR HTTP call), merges
+ *     returned outputs into sessionContext, and automatically advances to the
+ *     next step via POST /api/workflow/step.
+ *   - Shows a "Skip this step" bar for steps marked optional: true in the
+ *     workflow definition, allowing the user to bypass them without submitting.
+ *   - All workflow state (full WorkflowDefinition, stepIndex, sessionContext)
+ *     lives in the Zustand chat store so it survives re-renders and can be
+ *     serialised for persistence.
+ */
+
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
@@ -16,8 +35,12 @@ import type {
   WorkflowStepDefinition,
 } from "@/types/workflow";
 
+// Single processor instance shared across all surfaces in this chat session.
+// The processor maintains per-surface component trees and data models so that
+// each step's form renders independently within the same conversation.
 const processor = createMessageProcessor();
 
+/** Returns steps sorted by sequence_number, mirroring the server-side ordering. */
 function getSortedSteps(
   workflow: WorkflowDefinition,
 ): WorkflowStepDefinition[] {
@@ -26,6 +49,11 @@ function getSortedSteps(
   );
 }
 
+/**
+ * Converts a raw UI schema object + pre-fetched step data into the
+ * AnyComponentNode tree expected by Renderer. Returns null when no schema
+ * is available so the caller can fall back to a plain-text step description.
+ */
 function buildUiFromData(
   ui: unknown,
   stepData: unknown,
@@ -57,6 +85,12 @@ export default function A2UIChatPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Fetches and renders a specific workflow step. Called after a successful
+   * form submission (auto-advance) or when the user skips an optional step.
+   * Posts the full workflow object + target index to /api/workflow/step so the
+   * server can run the context_resolver and return fresh FHIR data if needed.
+   */
   const loadWorkflowStep = useCallback(
     async (
       workflow: WorkflowDefinition,
@@ -116,6 +150,11 @@ export default function A2UIChatPage() {
     [addMessage, setLoading, mergeContext, setWorkflow],
   );
 
+  /**
+   * Advances past the current step without submitting its form.
+   * Only shown when the active step has optional: true. If there is no next
+   * step, the workflow is considered complete and the session is cleared.
+   */
   const skipCurrentStep = useCallback(async () => {
     if (!activeWorkflow || currentStepIndex === null) return;
     const steps = getSortedSteps(activeWorkflow);
@@ -136,12 +175,19 @@ export default function A2UIChatPage() {
     clearSession,
   ]);
 
+  /**
+   * Listens for "dispatch" events fired by A2UI form submit buttons.
+   * Each event carries the action name and the serialised form context.
+   * We read workflow state directly from the store (not from closure) to avoid
+   * stale captures — the form may have been rendered in a previous render cycle.
+   */
   useEffect(() => {
     const handleDispatch = async (event: Event) => {
       const { message, resolve } = (event as CustomEvent).detail;
       const actionName: string = message.userAction.name;
       const context: Record<string, unknown> = message.userAction.context ?? {};
 
+      // Read fresh state from the store, not from the closure, to avoid stale workflow/step values.
       const state = useChatStore.getState();
       const currentWorkflow = state.activeWorkflow;
       const currentStepIdx = state.currentStepIndex;
@@ -246,6 +292,12 @@ export default function A2UIChatPage() {
     loadWorkflowStep,
   ]);
 
+  /**
+   * Sends the user's message to /api/workflow. The server calls the external
+   * agent, selects the appropriate workflow, and returns its first step.
+   * On a "workflow_step" response the full WorkflowDefinition is stored in
+   * Zustand so all subsequent step/submit calls can re-send it to the server.
+   */
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -329,6 +381,7 @@ export default function A2UIChatPage() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Determines whether to show the "Skip this step" bar above the input.
   const currentStepIsOptional =
     activeWorkflow !== null &&
     currentStepIndex !== null &&

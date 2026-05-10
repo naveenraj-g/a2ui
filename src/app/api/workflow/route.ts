@@ -1,3 +1,28 @@
+/**
+ * POST /api/workflow
+ *
+ * Entry point for the workflow system. Receives a plain-text user message,
+ * forwards it to the external AI agent, and returns the first step of the
+ * workflow that the agent selected.
+ *
+ * Flow:
+ *   1. Obtain a short-lived JWT from Better Auth (forwarding the session cookie).
+ *   2. POST the user message to AGENT_API_URL with Bearer auth.
+ *      The agent interprets intent and returns a WorkflowDefinition JSON.
+ *   3. Sort workflow_steps by sequence_number and take step[0].
+ *   4. If the first step declares a context_resolver, run it now so the client
+ *      receives any pre-fetched FHIR data alongside the step definition.
+ *   5. Return the full workflow object + first step to the client.
+ *      The client stores the workflow in Zustand and renders the step.
+ *
+ * The full workflow JSON travels back to the client and is re-sent with each
+ * subsequent /step and /submit call. No server-side workflow state is kept.
+ *
+ * Request body:  { message: string, sessionContext?: Record<string, unknown> }
+ * Response:      { type: "workflow_step", workflow, stepIndex, step, stepData, sessionContext }
+ *             or { type: "error", message: string }
+ */
+
 import type { WorkflowDefinition } from "@/types/workflow";
 import { getAgentToken, sortedSteps, runContextResolver } from "./_lib";
 
@@ -14,8 +39,11 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Fetch a fresh JWT so the agent can verify the caller's identity.
     const token = await getAgentToken();
 
+    // Ask the external agent which workflow matches the user's intent.
+    // The agent returns a complete WorkflowDefinition JSON.
     const agentRes = await fetch(AGENT_API_URL, {
       method: "POST",
       headers: {
@@ -31,6 +59,8 @@ export async function POST(req: Request) {
     }
 
     const workflow: WorkflowDefinition = await agentRes.json();
+
+    // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);
     const firstStep = steps[0];
 
@@ -41,6 +71,8 @@ export async function POST(req: Request) {
     let stepData: Record<string, unknown> = {};
     let mergedContext = { ...sessionContext };
 
+    // Some steps need to pre-fetch a resource before showing the form
+    // (e.g. the update-patient step fetches the current Patient record).
     if (firstStep.context_resolver) {
       stepData = await runContextResolver(firstStep.context_resolver, mergedContext, token);
       mergedContext = { ...mergedContext, ...stepData };
@@ -48,10 +80,10 @@ export async function POST(req: Request) {
 
     return Response.json({
       type: "workflow_step",
-      workflow,
+      workflow,        // full definition — client caches this for the whole workflow session
       stepIndex: 0,
       step: firstStep,
-      stepData,
+      stepData,        // pre-fetched FHIR data for the first step, if any
       sessionContext: mergedContext,
     });
   } catch (error) {
