@@ -1,0 +1,68 @@
+export interface WorkflowDefinition {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  tags?: string[];
+  llm_hints?: {
+    intent_examples?: string[];
+    when_to_use?: string[];
+    required_context?: string[];
+  };
+  execution?: {
+    mode: string;
+    orchestrator: string;
+    retryable: boolean;
+    audit_enabled: boolean;
+  };
+  workflow_steps: WorkflowStepDefinition[];
+}
+
+export interface WorkflowStepDefinition {
+  sequence_number: number;
+  id: string;
+  name: string;
+  step_type: "form" | "view" | "confirm";
+  optional?: boolean;
+  description: string;
+  context: {
+    inputs: Record<string, StepContextInput>;
+    outputs: Record<string, StepContextOutput>;
+  };
+  context_resolver?: {
+    description: string;
+    tool_name: string;
+    url: string;
+    method: "GET" | "POST";
+  };
+  ui: {
+    schema: string;
+    mode: "create" | "edit" | "view";
+    prefill: boolean;
+    editable: boolean;
+    submit_label: string;
+  };
+  actions: WorkflowAction[];
+}
+
+export interface StepContextInput {
+  type: string;
+  resource?: string;
+  source?: string;
+}
+
+export interface StepContextOutput {
+  type: string;
+  resource?: string;
+  field?: string;
+}
+
+export interface WorkflowAction {
+  type: "http";
+  purpose: string;
+  tool_name: string;
+  url: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  validation_schema?: string;
+  retryable: boolean;
+}
