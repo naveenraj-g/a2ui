@@ -11,10 +11,10 @@
  */
 
 import type { WorkflowStepDefinition, StepContextOutput } from "@/types/workflow";
-import { getAgentToken } from "@/modules/server/auth/agent-token";
+import { getJWTToken } from "@/modules/server/auth/jwt-token";
 
 // Re-export so route files only need to import from this one file.
-export { getAgentToken };
+export { getJWTToken };
 
 /**
  * Returns workflow steps sorted by sequence_number ascending.

@@ -37,7 +37,7 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getAgentToken, sortedSteps, resolveUrl, extractOutputs, cleanFormData } from "../_lib";
+import { getJWTToken, sortedSteps, resolveUrl, extractOutputs, cleanFormData } from "../_lib";
 
 export async function POST(req: Request) {
   const {
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const token = await getAgentToken();
+    const token = await getJWTToken();
 
     // A2UI forms serialise their field values as a JSON string inside
     // context.formData. Parse it back if that's what arrived.

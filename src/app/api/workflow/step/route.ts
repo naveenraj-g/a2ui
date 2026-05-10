@@ -24,7 +24,7 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getAgentToken, sortedSteps, runContextResolver } from "../_lib";
+import { getJWTToken, sortedSteps, runContextResolver } from "../_lib";
 
 export async function POST(req: Request) {
   const {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const token = await getAgentToken();
+    const token = await getJWTToken();
     let stepData: Record<string, unknown> = {};
     let mergedContext = { ...sessionContext };
 

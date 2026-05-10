@@ -24,7 +24,7 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getAgentToken, sortedSteps, runContextResolver } from "./_lib";
+import { getJWTToken, sortedSteps, runContextResolver } from "./_lib";
 
 const AGENT_API_URL = process.env.AGENT_API_URL!;
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
   try {
     // Fetch a fresh JWT so the agent can verify the caller's identity.
-    const token = await getAgentToken();
+    const token = await getJWTToken();
 
     // Ask the external agent which workflow matches the user's intent.
     // The agent returns a complete WorkflowDefinition JSON.
