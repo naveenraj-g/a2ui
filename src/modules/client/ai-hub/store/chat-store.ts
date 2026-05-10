@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { AnyComponentNode } from "../a2ui/types";
+import type { WorkflowDefinition } from "@/types/workflow";
 
 export interface ToolCallInfo {
   toolName: string;
@@ -16,18 +17,18 @@ export interface ChatMessage {
   ui?: AnyComponentNode | null;
   toolCall?: ToolCallInfo;
   workflowSnapshot?: {
-    workflow: string | null;
-    step: string | null;
+    workflowId: string;
+    stepIndex: number;
+    stepId: string;
     contextAtStep: Record<string, unknown>;
   };
 }
 
-/** Serializable conversation state for DB persistence */
 export interface SerializableConversation {
   messages: ChatMessage[];
   sessionContext: Record<string, unknown>;
-  activeWorkflow: string | null;
-  currentStep: string | null;
+  activeWorkflow: WorkflowDefinition | null;
+  currentStepIndex: number | null;
 }
 
 interface ChatState {
@@ -35,23 +36,19 @@ interface ChatState {
   input: string;
   loading: boolean;
 
-  // Workflow session state
   sessionContext: Record<string, unknown>;
-  activeWorkflow: string | null;
-  currentStep: string | null;
+  activeWorkflow: WorkflowDefinition | null;
+  currentStepIndex: number | null;
 
-  // Message actions
   addMessage: (msg: ChatMessage) => void;
   updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
   setInput: (input: string) => void;
   setLoading: (loading: boolean) => void;
 
-  // Workflow actions
   mergeContext: (data: Record<string, unknown>) => void;
-  setWorkflow: (workflow: string | null, step: string | null) => void;
+  setWorkflow: (workflow: WorkflowDefinition | null, stepIndex: number | null) => void;
   clearSession: () => void;
 
-  // Persistence
   getSerializableState: () => SerializableConversation;
   loadState: (state: SerializableConversation) => void;
 }
@@ -62,35 +59,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loading: false,
   sessionContext: {},
   activeWorkflow: null,
-  currentStep: null,
+  currentStepIndex: null,
 
   addMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
 
   updateMessage: (id, updates) =>
     set((state) => ({
-      messages: state.messages.map((m) =>
-        m.id === id ? { ...m, ...updates } : m,
-      ),
+      messages: state.messages.map((m) => (m.id === id ? { ...m, ...updates } : m)),
     })),
 
   setInput: (input) => set({ input }),
-
   setLoading: (loading) => set({ loading }),
 
   mergeContext: (data) =>
-    set((state) => ({
-      sessionContext: { ...state.sessionContext, ...data },
-    })),
+    set((state) => ({ sessionContext: { ...state.sessionContext, ...data } })),
 
-  setWorkflow: (workflow, step) =>
-    set({ activeWorkflow: workflow, currentStep: step }),
+  setWorkflow: (workflow, stepIndex) => set({ activeWorkflow: workflow, currentStepIndex: stepIndex }),
 
-  clearSession: () =>
-    set({ sessionContext: {}, activeWorkflow: null, currentStep: null }),
+  clearSession: () => set({ sessionContext: {}, activeWorkflow: null, currentStepIndex: null }),
 
   getSerializableState: () => {
-    const { messages, sessionContext, activeWorkflow, currentStep } = get();
-    return { messages, sessionContext, activeWorkflow, currentStep };
+    const { messages, sessionContext, activeWorkflow, currentStepIndex } = get();
+    return { messages, sessionContext, activeWorkflow, currentStepIndex };
   },
 
   loadState: (state) =>
@@ -98,6 +88,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: state.messages,
       sessionContext: state.sessionContext,
       activeWorkflow: state.activeWorkflow,
-      currentStep: state.currentStep,
+      currentStepIndex: state.currentStepIndex,
     }),
 }));

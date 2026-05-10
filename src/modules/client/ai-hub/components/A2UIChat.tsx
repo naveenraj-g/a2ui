@@ -8,11 +8,35 @@ import { parseUI } from "../utils/mapUiSchemaDataV3";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, SkipForward } from "lucide-react";
 import { useChatStore } from "../store/chat-store";
 import { ToolCallDetails } from "./ToolCallDetails";
+import type {
+  WorkflowDefinition,
+  WorkflowStepDefinition,
+} from "@/types/workflow";
 
 const processor = createMessageProcessor();
+
+function getSortedSteps(
+  workflow: WorkflowDefinition,
+): WorkflowStepDefinition[] {
+  return [...workflow.workflow_steps].sort(
+    (a, b) => a.sequence_number - b.sequence_number,
+  );
+}
+
+function buildUiFromData(
+  ui: unknown,
+  stepData: unknown,
+): AnyComponentNode | null {
+  if (!ui) return null;
+  try {
+    return parseUI(JSON.stringify({ ui, data: stepData ?? null }));
+  } catch {
+    return null;
+  }
+}
 
 export default function A2UIChatPage() {
   const {
@@ -25,7 +49,7 @@ export default function A2UIChatPage() {
     setLoading,
     sessionContext,
     activeWorkflow,
-    currentStep,
+    currentStepIndex,
     mergeContext,
     setWorkflow,
     clearSession,
@@ -33,35 +57,105 @@ export default function A2UIChatPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleWorkflowResponse = useCallback(
-    (data: any) => {
-      if (data.workflow) {
-        const wf = data.workflow;
-        if (wf.sessionContext) mergeContext(wf.sessionContext);
-        if (wf.nextStep) setWorkflow(wf.name, wf.nextStep);
-        else clearSession();
+  const loadWorkflowStep = useCallback(
+    async (
+      workflow: WorkflowDefinition,
+      stepIndex: number,
+      ctx: Record<string, unknown>,
+    ) => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/workflow/step", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workflow, stepIndex, sessionContext: ctx }),
+        });
+
+        const data = await res.json();
+
+        if (data.type === "error") {
+          addMessage({
+            id: crypto.randomUUID(),
+            role: "assistant",
+            text: `⚠️ ${data.message}`,
+          });
+          return;
+        }
+
+        const step: WorkflowStepDefinition =
+          data.step ?? getSortedSteps(workflow)[stepIndex];
+        const parsedUi = buildUiFromData(data.ui, data.stepData);
+
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: !parsedUi
+            ? `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`
+            : undefined,
+          ui: parsedUi,
+          workflowSnapshot: {
+            workflowId: workflow.id,
+            stepIndex,
+            stepId: step.id,
+            contextAtStep: ctx,
+          },
+        });
+
+        if (data.sessionContext) mergeContext(data.sessionContext);
+        setWorkflow(workflow, stepIndex);
+      } catch (err) {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: `⚠️ Failed to load step: ${err instanceof Error ? err.message : "Unknown error"}`,
+        });
+      } finally {
+        setLoading(false);
       }
     },
-    [mergeContext, setWorkflow, clearSession],
+    [addMessage, setLoading, mergeContext, setWorkflow],
   );
+
+  const skipCurrentStep = useCallback(async () => {
+    if (!activeWorkflow || currentStepIndex === null) return;
+    const steps = getSortedSteps(activeWorkflow);
+    const nextIndex =
+      currentStepIndex + 1 < steps.length ? currentStepIndex + 1 : null;
+    if (nextIndex !== null) {
+      setWorkflow(activeWorkflow, nextIndex);
+      await loadWorkflowStep(activeWorkflow, nextIndex, sessionContext);
+    } else {
+      clearSession();
+    }
+  }, [
+    activeWorkflow,
+    currentStepIndex,
+    sessionContext,
+    setWorkflow,
+    loadWorkflowStep,
+    clearSession,
+  ]);
 
   useEffect(() => {
     const handleDispatch = async (event: Event) => {
       const { message, resolve } = (event as CustomEvent).detail;
-      const actionName = message.userAction.name;
-      const context = message.userAction.context ?? {};
+      const actionName: string = message.userAction.name;
+      const context: Record<string, unknown> = message.userAction.context ?? {};
 
-      const formData: Record<string, unknown> = {};
-      if (typeof context === "object") {
-        for (const [key, val] of Object.entries(context)) {
-          formData[key] = val;
-        }
+      const state = useChatStore.getState();
+      const currentWorkflow = state.activeWorkflow;
+      const currentStepIdx = state.currentStepIndex;
+      const currentCtx = state.sessionContext;
+
+      mergeContext(context);
+
+      if (!currentWorkflow || currentStepIdx === null) {
+        resolve([]);
+        return;
       }
 
-      const currentSessionContext = useChatStore.getState().sessionContext;
-      const currentWorkflow = useChatStore.getState().activeWorkflow;
-      const currentStepVal = useChatStore.getState().currentStep;
-      mergeContext(formData);
+      const steps = getSortedSteps(currentWorkflow);
+      const currentStepDef = steps[currentStepIdx];
 
       const toolMsgId = crypto.randomUUID();
       addMessage({
@@ -69,26 +163,27 @@ export default function A2UIChatPage() {
         role: "assistant",
         toolCall: {
           toolName: actionName,
-          formData,
+          formData: context,
           status: "pending",
         },
         workflowSnapshot: {
-          workflow: currentWorkflow,
-          step: currentStepVal,
-          contextAtStep: { ...currentSessionContext, ...formData },
+          workflowId: currentWorkflow.id,
+          stepIndex: currentStepIdx,
+          stepId: currentStepDef?.id ?? "",
+          contextAtStep: { ...currentCtx, ...context },
         },
       });
 
       try {
-        const res = await fetch("/api/a2ui-chat/submit", {
+        const res = await fetch("/api/workflow/submit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            workflow: currentWorkflow,
+            stepIndex: currentStepIdx,
             actionName,
-            context: formData,
-            activeWorkflow: currentWorkflow,
-            currentStep: currentStepVal,
-            sessionContext: { ...currentSessionContext, ...formData },
+            formData: context,
+            sessionContext: { ...currentCtx, ...context },
           }),
         });
 
@@ -96,23 +191,33 @@ export default function A2UIChatPage() {
 
         if (data.success) {
           updateMessage(toolMsgId, {
-            toolCall: { toolName: actionName, formData, result: data.data, status: "success" },
+            toolCall: {
+              toolName: actionName,
+              formData: context,
+              result: data.data,
+              status: "success",
+            },
           });
-          handleWorkflowResponse(data);
-          if (data.workflow?.nextStep) {
-            await triggerWorkflowStep(
-              data.workflow.name,
-              data.workflow.nextStep,
-              data.workflow.sessionContext ?? {},
+
+          if (data.sessionContext) mergeContext(data.sessionContext);
+
+          if (data.nextStepIndex !== null) {
+            setWorkflow(currentWorkflow, data.nextStepIndex);
+            await loadWorkflowStep(
+              currentWorkflow,
+              data.nextStepIndex,
+              data.sessionContext ?? {},
             );
+          } else {
+            clearSession();
           }
         } else {
           updateMessage(toolMsgId, {
             toolCall: {
               toolName: actionName,
-              formData,
+              formData: context,
               status: "error",
-              error: data.error || "Tool execution failed",
+              error: data.error || "Submission failed",
             },
           });
         }
@@ -120,7 +225,7 @@ export default function A2UIChatPage() {
         updateMessage(toolMsgId, {
           toolCall: {
             toolName: actionName,
-            formData,
+            formData: context,
             status: "error",
             error: err instanceof Error ? err.message : "Network error",
           },
@@ -132,54 +237,14 @@ export default function A2UIChatPage() {
 
     processor.addEventListener("dispatch", handleDispatch);
     return () => processor.removeEventListener("dispatch", handleDispatch);
-  }, [addMessage, updateMessage, mergeContext, handleWorkflowResponse]);
-
-  const triggerWorkflowStep = useCallback(
-    async (workflowName: string, stepId: string, ctx: Record<string, unknown>) => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/a2ui-chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ workflow: workflowName, step: stepId, sessionContext: ctx }),
-        });
-
-        const data = await res.json();
-
-        const aiMsg: {
-          id: string;
-          role: "assistant";
-          text?: string;
-          ui?: AnyComponentNode | null;
-          workflowSnapshot?: { workflow: string | null; step: string | null; contextAtStep: Record<string, unknown> };
-        } = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          workflowSnapshot: { workflow: workflowName, step: stepId, contextAtStep: ctx },
-        };
-
-        if (data.type === "ui") {
-          aiMsg.ui = parseUI(JSON.stringify({ ui: data.ui, data: data.data ?? null }));
-        } else if (data.type === "error") {
-          aiMsg.text = `⚠️ ${data.message}`;
-        } else {
-          aiMsg.text = data.message || JSON.stringify(data);
-        }
-
-        addMessage(aiMsg);
-        handleWorkflowResponse(data);
-      } catch (err) {
-        addMessage({
-          id: crypto.randomUUID(),
-          role: "assistant",
-          text: `⚠️ Workflow error: ${err instanceof Error ? err.message : "Unknown error"}`,
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [addMessage, setLoading, handleWorkflowResponse],
-  );
+  }, [
+    addMessage,
+    updateMessage,
+    mergeContext,
+    setWorkflow,
+    clearSession,
+    loadWorkflowStep,
+  ]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -190,47 +255,56 @@ export default function A2UIChatPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/a2ui-chat", {
+      const res = await fetch("/api/workflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, sessionContext, workflow: activeWorkflow, step: currentStep }),
+        body: JSON.stringify({ message: text, sessionContext }),
       });
 
       const data = await res.json();
 
-      const aiMsg: {
-        id: string;
-        role: "assistant";
-        text?: string;
-        ui?: AnyComponentNode | null;
-        workflowSnapshot?: { workflow: string | null; step: string | null; contextAtStep: Record<string, unknown> };
-      } = { id: crypto.randomUUID(), role: "assistant" };
+      if (data.type === "workflow_step") {
+        const workflow: WorkflowDefinition = data.workflow;
+        const step: WorkflowStepDefinition = data.step;
+        const stepIndex: number = data.stepIndex ?? 0;
+        const parsedUi = buildUiFromData(data.ui, data.stepData);
 
-      switch (data.type) {
-        case "ui":
-          aiMsg.ui = parseUI(JSON.stringify({ ui: data.ui, data: data.data ?? null }));
-          break;
-        case "text":
-        case "fallback":
-          aiMsg.text = data.message;
-          break;
-        case "error":
-          aiMsg.text = `⚠️ ${data.message}`;
-          break;
-        default:
-          aiMsg.text = JSON.stringify(data);
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: !parsedUi
+            ? `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`
+            : undefined,
+          ui: parsedUi,
+          workflowSnapshot: {
+            workflowId: workflow.id,
+            stepIndex,
+            stepId: step.id,
+            contextAtStep: data.sessionContext ?? {},
+          },
+        });
+
+        if (data.sessionContext) mergeContext(data.sessionContext);
+        setWorkflow(workflow, stepIndex);
+      } else if (data.type === "text" || data.type === "fallback") {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: data.message,
+        });
+      } else if (data.type === "error") {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: `⚠️ ${data.message}`,
+        });
+      } else {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: JSON.stringify(data),
+        });
       }
-
-      if (data.workflow) {
-        aiMsg.workflowSnapshot = {
-          workflow: data.workflow.name,
-          step: data.workflow.currentStep,
-          contextAtStep: data.workflow.sessionContext ?? {},
-        };
-      }
-
-      addMessage(aiMsg);
-      handleWorkflowResponse(data);
     } catch (err) {
       addMessage({
         id: crypto.randomUUID(),
@@ -240,11 +314,25 @@ export default function A2UIChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, addMessage, setInput, setLoading, sessionContext, activeWorkflow, currentStep, handleWorkflowResponse]);
+  }, [
+    input,
+    loading,
+    addMessage,
+    setInput,
+    setLoading,
+    sessionContext,
+    mergeContext,
+    setWorkflow,
+  ]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const currentStepIsOptional =
+    activeWorkflow !== null &&
+    currentStepIndex !== null &&
+    getSortedSteps(activeWorkflow)[currentStepIndex]?.optional === true;
 
   return (
     <div className="flex flex-col h-[calc(100dvh-160px)] overflow-hidden rounded-lg border border-border bg-background">
@@ -256,7 +344,9 @@ export default function A2UIChatPage() {
               <Bot className="size-12 mx-auto mb-4 opacity-30" />
               <p className="text-sm">
                 Type a message to get started. Try{" "}
-                <span className="font-medium text-foreground">&quot;create a patient&quot;</span>
+                <span className="font-medium text-foreground">
+                  &quot;create a patient&quot;
+                </span>
               </p>
             </div>
           )}
@@ -267,12 +357,14 @@ export default function A2UIChatPage() {
               className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "assistant" && (
-                <div className="flex-shrink-0 flex size-8 items-center justify-center rounded-full bg-primary/10">
+                <div className="shrink-0 flex size-8 items-center justify-center rounded-full bg-primary/10">
                   <Bot className="size-4 text-primary" />
                 </div>
               )}
 
-              <div className={`max-w-[80%] ${msg.role === "user" ? "text-right" : "text-left"}`}>
+              <div
+                className={`max-w-[80%] ${msg.role === "user" ? "text-right" : "text-left"}`}
+              >
                 {msg.text && (
                   <p
                     className={
@@ -287,7 +379,11 @@ export default function A2UIChatPage() {
 
                 {msg.ui && (
                   <div className="mt-2">
-                    <Renderer processor={processor} surfaceId={`surface-${msg.id}`} component={msg.ui} />
+                    <Renderer
+                      processor={processor}
+                      surfaceId={`surface-${msg.id}`}
+                      component={msg.ui}
+                    />
                   </div>
                 )}
 
@@ -299,7 +395,7 @@ export default function A2UIChatPage() {
               </div>
 
               {msg.role === "user" && (
-                <div className="flex-shrink-0 flex size-8 items-center justify-center rounded-full bg-muted">
+                <div className="shrink-0 flex size-8 items-center justify-center rounded-full bg-muted">
                   <User className="size-4 text-muted-foreground" />
                 </div>
               )}
@@ -308,7 +404,7 @@ export default function A2UIChatPage() {
 
           {loading && (
             <div className="flex gap-3 justify-start">
-              <div className="flex-shrink-0 flex size-8 items-center justify-center rounded-full bg-primary/10">
+              <div className="shrink-0 flex size-8 items-center justify-center rounded-full bg-primary/10">
                 <Bot className="size-4 text-primary" />
               </div>
               <div className="flex gap-2 items-center rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-3">
@@ -323,6 +419,18 @@ export default function A2UIChatPage() {
         </div>
       </div>
 
+      {/* Skip optional step */}
+      {currentStepIsOptional && !loading && (
+        <div className="border-t border-border bg-background px-4 py-2">
+          <div className="max-w-4xl mx-auto flex justify-end">
+            <Button variant="ghost" size="sm" onClick={skipCurrentStep}>
+              <SkipForward className="size-4 mr-2" />
+              Skip this step
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-border bg-background p-4">
         <div className="max-w-4xl mx-auto flex gap-2">
@@ -330,7 +438,7 @@ export default function A2UIChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder='Try "create a patient" or "update patient 2"...'
+            placeholder='Try "create a patient" or ask anything...'
             disabled={loading}
             className="flex-1"
           />
