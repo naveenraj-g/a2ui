@@ -27,7 +27,7 @@ import type { WorkflowDefinition } from "@/types/workflow";
 import { getJWTToken, sortedSteps, runContextResolver } from "./_lib";
 import create_patient_workflow from "@/modules/client/ai-hub/workflows/patient/create_patient.json";
 
-// const AGENT_API_URL = process.env.AGENT_API_URL!;
+const AGENT_API_URL = process.env.AGENT_API_URL!;
 
 export async function POST(req: Request) {
   const {
@@ -49,22 +49,22 @@ export async function POST(req: Request) {
 
     // Ask the external agent which workflow matches the user's intent.
     // The agent returns a complete WorkflowDefinition JSON.
-    // const agentRes = await fetch(AGENT_API_URL, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    //   body: JSON.stringify({ message }),
-    //   cache: "no-store",
-    // });
+    const agentRes = await fetch(AGENT_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message }),
+      cache: "no-store",
+    });
 
-    // if (!agentRes.ok) {
-    //   throw new Error(`Agent API error: ${agentRes.status}`);
-    // }
+    if (!agentRes.ok) {
+      throw new Error(`Agent API error: ${agentRes.status}`);
+    }
 
-    // const workflow: WorkflowDefinition = await agentRes.json();
-    const workflow: WorkflowDefinition = await create_patient_workflow;
+    const workflow: WorkflowDefinition = await agentRes.json();
+    // const workflow: WorkflowDefinition = await create_patient_workflow;
 
     // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);
