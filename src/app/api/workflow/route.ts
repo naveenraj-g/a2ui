@@ -25,17 +25,22 @@
 
 import type { WorkflowDefinition } from "@/types/workflow";
 import { getJWTToken, sortedSteps, runContextResolver } from "./_lib";
+import create_patient_workflow from "@/modules/client/ai-hub/workflows/patient/create_patient.json";
 
-const AGENT_API_URL = process.env.AGENT_API_URL!;
+// const AGENT_API_URL = process.env.AGENT_API_URL!;
 
 export async function POST(req: Request) {
   const {
     message,
     sessionContext = {},
-  }: { message: string; sessionContext?: Record<string, unknown> } = await req.json();
+  }: { message: string; sessionContext?: Record<string, unknown> } =
+    await req.json();
 
   if (!message?.trim()) {
-    return Response.json({ type: "error", message: "Empty message" }, { status: 400 });
+    return Response.json(
+      { type: "error", message: "Empty message" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -44,28 +49,32 @@ export async function POST(req: Request) {
 
     // Ask the external agent which workflow matches the user's intent.
     // The agent returns a complete WorkflowDefinition JSON.
-    const agentRes = await fetch(AGENT_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ message }),
-      cache: "no-store",
-    });
+    // const agentRes = await fetch(AGENT_API_URL, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    //   body: JSON.stringify({ message }),
+    //   cache: "no-store",
+    // });
 
-    if (!agentRes.ok) {
-      throw new Error(`Agent API error: ${agentRes.status}`);
-    }
+    // if (!agentRes.ok) {
+    //   throw new Error(`Agent API error: ${agentRes.status}`);
+    // }
 
-    const workflow: WorkflowDefinition = await agentRes.json();
+    // const workflow: WorkflowDefinition = await agentRes.json();
+    const workflow: WorkflowDefinition = await create_patient_workflow;
 
     // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);
     const firstStep = steps[0];
 
     if (!firstStep) {
-      return Response.json({ type: "error", message: "Workflow has no steps" }, { status: 500 });
+      return Response.json(
+        { type: "error", message: "Workflow has no steps" },
+        { status: 500 },
+      );
     }
 
     let stepData: Record<string, unknown> = {};
@@ -74,20 +83,27 @@ export async function POST(req: Request) {
     // Some steps need to pre-fetch a resource before showing the form
     // (e.g. the update-patient step fetches the current Patient record).
     if (firstStep.context_resolver) {
-      stepData = await runContextResolver(firstStep.context_resolver, mergedContext, token);
+      stepData = await runContextResolver(
+        firstStep.context_resolver,
+        mergedContext,
+        token,
+      );
       mergedContext = { ...mergedContext, ...stepData };
     }
 
     return Response.json({
       type: "workflow_step",
-      workflow,        // full definition — client caches this for the whole workflow session
+      workflow, // full definition — client caches this for the whole workflow session
       stepIndex: 0,
       step: firstStep,
-      stepData,        // pre-fetched FHIR data for the first step, if any
+      stepData, // pre-fetched FHIR data for the first step, if any
       sessionContext: mergedContext,
     });
   } catch (error) {
     console.error("[workflow] Failed to start workflow:", error);
-    return Response.json({ type: "error", message: "Failed to start workflow" }, { status: 500 });
+    return Response.json(
+      { type: "error", message: "Failed to start workflow" },
+      { status: 500 },
+    );
   }
 }

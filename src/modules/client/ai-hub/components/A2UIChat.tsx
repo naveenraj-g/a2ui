@@ -24,6 +24,7 @@ import { createMessageProcessor } from "../a2ui/rendering/processor";
 import { Renderer } from "../a2ui/rendering/renderer";
 import type { AnyComponentNode } from "../a2ui/types";
 import { parseUI } from "../utils/mapUiSchemaDataV3";
+import { UI_SCHEMA_REGISTRY } from "../schemas/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -118,7 +119,8 @@ export default function A2UIChatPage() {
 
         const step: WorkflowStepDefinition =
           data.step ?? getSortedSteps(workflow)[stepIndex];
-        const parsedUi = buildUiFromData(data.ui, data.stepData);
+        const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
+        const parsedUi = buildUiFromData(uiSchema, data.stepData);
 
         addMessage({
           id: crypto.randomUUID(),
@@ -319,7 +321,8 @@ export default function A2UIChatPage() {
         const workflow: WorkflowDefinition = data.workflow;
         const step: WorkflowStepDefinition = data.step;
         const stepIndex: number = data.stepIndex ?? 0;
-        const parsedUi = buildUiFromData(data.ui, data.stepData);
+        const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
+        const parsedUi = buildUiFromData(uiSchema, data.stepData);
 
         addMessage({
           id: crypto.randomUUID(),

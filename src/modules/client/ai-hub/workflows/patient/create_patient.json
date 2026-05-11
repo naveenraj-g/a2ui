@@ -59,7 +59,7 @@
           "type": "http",
           "purpose": "create_patient",
           "tool_name": "create_patient",
-          "url": "https://fhir.drgodly.com/api/fhir/v1/patients/",
+          "url": "http://localhost:8001/api/fhir/v1/patients/",
           "method": "POST",
           "validation_schema": "patient_create_schema",
           "retryable": true
@@ -90,7 +90,7 @@
       "context_resolver": {
         "description": "Validate that the Patient exists and hydrate the latest Patient resource before appending identifiers.",
         "tool_name": "get_patient_by_id",
-        "url": "https://fhir.drgodly.com/api/fhir/v1/patients/$patient_id",
+        "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id",
         "method": "GET"
       },
       "ui": {
@@ -105,7 +105,7 @@
           "type": "http",
           "purpose": "add_patient_identifier",
           "tool_name": "add_patient_identifier",
-          "url": "https://fhir.drgodly.com/api/fhir/v1/patients/$patient_id/identifiers",
+          "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id/identifiers",
           "method": "POST",
           "validation_schema": "identifier_create_schema",
           "retryable": true
@@ -136,7 +136,7 @@
       "context_resolver": {
         "description": "Validate that the Patient exists and hydrate the latest Patient resource before appending telecom information.",
         "tool_name": "get_patient_by_id",
-        "url": "https://fhir.drgodly.com/api/fhir/v1/patients/$patient_id",
+        "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id",
         "method": "GET"
       },
       "ui": {
@@ -151,7 +151,7 @@
           "type": "http",
           "purpose": "add_patient_telecom",
           "tool_name": "add_patient_telecom",
-          "url": "https://fhir.drgodly.com/api/fhir/v1/patients/$patient_id/telecom",
+          "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id/telecom",
           "method": "POST",
           "validation_schema": "telecom_create_schema",
           "retryable": true
@@ -182,7 +182,7 @@
       "context_resolver": {
         "description": "Validate that the Patient exists and hydrate the latest Patient resource before appending address information.",
         "tool_name": "get_patient_by_id",
-        "url": "https://fhir.drgodly.com/api/fhir/v1/patients/$patient_id",
+        "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id",
         "method": "GET"
       },
       "ui": {
@@ -197,7 +197,7 @@
           "type": "http",
           "purpose": "add_patient_address",
           "tool_name": "add_patient_address",
-          "url": "https://fhir.drgodly.com/api/fhir/v1/patients/$patient_id/addresses",
+          "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id/addresses",
           "method": "POST",
           "validation_schema": "address_create_schema",
           "retryable": true

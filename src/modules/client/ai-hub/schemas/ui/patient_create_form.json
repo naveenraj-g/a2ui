@@ -1,0 +1,160 @@
+{
+  "id": "patient-create-root",
+  "type": "Card",
+  "properties": {
+    "child": {
+      "id": "patient-create-form",
+      "type": "Form",
+      "properties": {
+        "action": { "name": "create_patient" },
+        "submitLabel": { "literalString": "Create Patient" },
+        "gap": "medium",
+        "alignment": "stretch",
+        "children": [
+          {
+            "id": "form-title",
+            "type": "Text",
+            "properties": {
+              "text": { "literalString": "New Patient Registration" },
+              "usageHint": "h2"
+            }
+          },
+          {
+            "id": "form-subtitle",
+            "type": "Text",
+            "properties": {
+              "text": { "literalString": "Enter patient demographics to create a new patient record." },
+              "usageHint": "caption"
+            }
+          },
+          {
+            "id": "divider-top",
+            "type": "Divider",
+            "properties": {}
+          },
+          {
+            "id": "section-personal",
+            "type": "Text",
+            "properties": {
+              "text": { "literalString": "Personal Information" },
+              "usageHint": "h4"
+            }
+          },
+          {
+            "id": "name-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "given_name",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Given Name" },
+                    "placeholder": { "literalString": "First name" },
+                    "textFieldType": "shortText"
+                  }
+                },
+                {
+                  "id": "family_name",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Family Name" },
+                    "placeholder": { "literalString": "Last name" },
+                    "textFieldType": "shortText"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "gender",
+            "type": "MultipleChoice",
+            "properties": {
+              "label": { "literalString": "Gender" },
+              "placeholder": { "literalString": "Select gender" },
+              "items": [
+                { "label": { "literalString": "Male" }, "value": "male" },
+                { "label": { "literalString": "Female" }, "value": "female" },
+                { "label": { "literalString": "Other" }, "value": "other" },
+                { "label": { "literalString": "Unknown" }, "value": "unknown" }
+              ]
+            }
+          },
+          {
+            "id": "divider-mid",
+            "type": "Divider",
+            "properties": {}
+          },
+          {
+            "id": "section-dates",
+            "type": "Text",
+            "properties": {
+              "text": { "literalString": "Dates & Status" },
+              "usageHint": "h4"
+            }
+          },
+          {
+            "id": "dates-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "birth_date",
+                  "type": "DateTimeInput",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Date of Birth" },
+                    "enableDate": true,
+                    "enableTime": false
+                  }
+                },
+                {
+                  "id": "deceased_datetime",
+                  "type": "DateTimeInput",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Deceased Date/Time (if applicable)" },
+                    "enableDate": true,
+                    "enableTime": true
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "flags-row",
+            "type": "Row",
+            "properties": {
+              "gap": "large",
+              "alignment": "center",
+              "children": [
+                {
+                  "id": "active",
+                  "type": "CheckBox",
+                  "properties": {
+                    "label": { "literalString": "Active" },
+                    "value": { "literalBoolean": true }
+                  }
+                },
+                {
+                  "id": "deceased_boolean",
+                  "type": "CheckBox",
+                  "properties": {
+                    "label": { "literalString": "Deceased" },
+                    "value": { "literalBoolean": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

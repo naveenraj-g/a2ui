@@ -37,7 +37,14 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getJWTToken, sortedSteps, resolveUrl, extractOutputs, cleanFormData } from "../_lib";
+import {
+  getJWTToken,
+  sortedSteps,
+  resolveUrl,
+  extractOutputs,
+  cleanFormData,
+} from "../_lib";
+import { VALIDATION_SCHEMAS } from "@/modules/client/ai-hub/schemas/validation";
 
 export async function POST(req: Request) {
   const {
@@ -49,7 +56,7 @@ export async function POST(req: Request) {
   }: {
     workflow: WorkflowDefinition;
     stepIndex: number;
-    actionName: string;       // matches the tool_name of the action to execute
+    actionName: string; // matches the tool_name of the action to execute
     formData: Record<string, unknown>;
     sessionContext?: Record<string, unknown>;
   } = await req.json();
@@ -58,7 +65,10 @@ export async function POST(req: Request) {
   const step = steps[stepIndex];
 
   if (!step) {
-    return Response.json({ success: false, error: "Step not found" }, { status: 404 });
+    return Response.json(
+      { success: false, error: "Step not found" },
+      { status: 404 },
+    );
   }
 
   // Prefer the action whose tool_name matches the dispatched actionName,
@@ -75,6 +85,7 @@ export async function POST(req: Request) {
 
   try {
     const token = await getJWTToken();
+    console.log(token);
 
     // A2UI forms serialise their field values as a JSON string inside
     // context.formData. Parse it back if that's what arrived.
@@ -84,6 +95,21 @@ export async function POST(req: Request) {
         : formData;
 
     const cleaned = cleanFormData(rawFields);
+
+    // Validate the cleaned payload against the action's declared schema (if any).
+    if (action.validation_schema) {
+      const schema = VALIDATION_SCHEMAS[action.validation_schema];
+      if (schema) {
+        const result = schema.safeParse(cleaned);
+        if (!result.success) {
+          const message = result.error.issues.map((i) => i.message).join("; ");
+          return Response.json(
+            { success: false, error: message },
+            { status: 422 },
+          );
+        }
+      }
+    }
 
     // Interpolate path params: e.g. ".../patients/$patient_id/identifiers"
     // uses patient_id from sessionContext (set after step 1 completed).
@@ -102,7 +128,10 @@ export async function POST(req: Request) {
 
     if (!res.ok) {
       const errText = await res.text();
-      return Response.json({ success: false, error: errText || `HTTP ${res.status}` });
+      return Response.json({
+        success: false,
+        error: errText || `HTTP ${res.status}`,
+      });
     }
 
     const data: Record<string, unknown> = await res.json();
@@ -122,7 +151,10 @@ export async function POST(req: Request) {
       sessionContext: updatedContext,
     });
   } catch (error) {
-    console.error(`[workflow/submit] Step ${stepIndex} action "${actionName}" failed:`, error);
+    console.error(
+      `[workflow/submit] Step ${stepIndex} action "${actionName}" failed:`,
+      error,
+    );
     return Response.json(
       {
         success: false,
