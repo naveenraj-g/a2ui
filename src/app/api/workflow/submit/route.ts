@@ -124,6 +124,7 @@ export async function POST(req: Request) {
       // GET requests must not carry a body per HTTP spec.
       body: action.method !== "GET" ? JSON.stringify(cleaned) : undefined,
       cache: "no-store",
+      signal: action.timeout_ms ? AbortSignal.timeout(action.timeout_ms) : undefined,
     });
 
     if (!res.ok) {

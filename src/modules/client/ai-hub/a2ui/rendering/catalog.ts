@@ -31,6 +31,7 @@ import { Breadcrumb } from "../catalog/breadcrumb";
 import { SearchField } from "../catalog/search-field";
 import { Link } from "../catalog/link";
 import { Separator } from "../catalog/separator";
+import { Markdown } from "../catalog/markdown";
 
 export type ComponentConfig = {
   component: React.ComponentType<any>;
@@ -74,4 +75,5 @@ export const DEFAULT_CATALOG: Catalog = {
   SearchField: { component: SearchField },
   Link: { component: Link },
   Separator: { component: Separator },
+  Markdown: { component: Markdown },
 };

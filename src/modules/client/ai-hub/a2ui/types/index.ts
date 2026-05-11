@@ -494,6 +494,10 @@ export interface SliderNode extends BaseComponentNode {
   properties: Slider;
 }
 
+export interface MarkdownContent {
+  content: StringValue;
+}
+
 export interface Chart {
   spec?: { [key: string]: any };
   values?: Array<{ [key: string]: any }>;
@@ -510,12 +514,18 @@ export interface ChartNode extends BaseComponentNode {
   properties: Chart;
 }
 
+export interface MarkdownNode extends BaseComponentNode {
+  type: "Markdown";
+  properties: MarkdownContent;
+}
+
 export interface CustomNode extends BaseComponentNode {
   type: string;
   properties: { [key: string]: ResolvedValue };
 }
 
 export type AnyComponentNode =
+  | MarkdownNode
   | TextNode
   | IconNode
   | ImageNode

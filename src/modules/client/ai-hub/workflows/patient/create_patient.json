@@ -19,13 +19,24 @@
       "User provides demographic information for a new patient",
       "User wants to register a patient in the healthcare system"
     ],
+    "when_not_to_use": [
+      "User wants to update an existing patient's details",
+      "User wants to search or list patients",
+      "User wants to delete a patient",
+      "User wants to view patient information",
+      "User provides a patient ID referring to an existing patient"
+    ],
     "required_context": []
   },
   "execution": {
     "mode": "deterministic",
     "orchestrator": "nextjs",
-    "retryable": true,
     "audit_enabled": true
+  },
+  "introduction": "I'll help you register a new patient. This is a 4-step process — the first step creates the core patient record, and the remaining 3 (identifier, contact point, and address) are optional and can be skipped.",
+  "completion": {
+    "message": "Patient registration complete. The patient record has been created and configured with the provided details.",
+    "action": "dismiss"
   },
   "workflow_steps": [
     {
@@ -33,7 +44,7 @@
       "id": "create_patient_resource",
       "name": "Create Patient Resource",
       "step_type": "form",
-      "description": "Create the base Patient resource using demographic details including name, birth date, gender, preferred language, and active status.",
+      "description": "Create the base Patient resource using demographic details including name, birth date, gender, and active status.",
       "context": {
         "inputs": {},
         "outputs": {
@@ -41,9 +52,6 @@
             "type": "integer",
             "resource": "Patient",
             "field": "id"
-          },
-          "patient_resource": {
-            "type": "Patient"
           }
         }
       },
@@ -51,18 +59,18 @@
         "schema": "patient_create_form",
         "mode": "create",
         "prefill": false,
-        "editable": true,
-        "submit_label": "Create Patient"
+        "editable": true
       },
       "actions": [
         {
           "type": "http",
           "purpose": "create_patient",
           "tool_name": "create_patient",
-          "url": "http://localhost:8001/api/fhir/v1/patients/",
+          "url": "$fhir_server_url/api/fhir/v1/patients/",
           "method": "POST",
           "validation_schema": "patient_create_schema",
-          "retryable": true
+          "retryable": true,
+          "timeout_ms": 10000
         }
       ]
     },
@@ -88,27 +96,28 @@
         }
       },
       "context_resolver": {
-        "description": "Validate that the Patient exists and hydrate the latest Patient resource before appending identifiers.",
+        "description": "Confirm the Patient still exists in the database before appending identifiers — guards against partial completion if the user previously exited mid-workflow.",
         "tool_name": "get_patient_by_id",
-        "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id",
-        "method": "GET"
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
       },
       "ui": {
         "schema": "patient_identifier_form",
-        "mode": "create",
+        "mode": "append",
         "prefill": false,
-        "editable": true,
-        "submit_label": "Add Identifier"
+        "editable": true
       },
       "actions": [
         {
           "type": "http",
           "purpose": "add_patient_identifier",
           "tool_name": "add_patient_identifier",
-          "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id/identifiers",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/identifiers",
           "method": "POST",
           "validation_schema": "identifier_create_schema",
-          "retryable": true
+          "retryable": true,
+          "timeout_ms": 10000
         }
       ]
     },
@@ -134,27 +143,28 @@
         }
       },
       "context_resolver": {
-        "description": "Validate that the Patient exists and hydrate the latest Patient resource before appending telecom information.",
+        "description": "Confirm the Patient still exists in the database before appending telecom — guards against partial completion if the user previously exited mid-workflow.",
         "tool_name": "get_patient_by_id",
-        "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id",
-        "method": "GET"
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
       },
       "ui": {
         "schema": "patient_telecom_form",
-        "mode": "create",
+        "mode": "append",
         "prefill": false,
-        "editable": true,
-        "submit_label": "Add Telecom"
+        "editable": true
       },
       "actions": [
         {
           "type": "http",
           "purpose": "add_patient_telecom",
           "tool_name": "add_patient_telecom",
-          "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id/telecom",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/telecom",
           "method": "POST",
           "validation_schema": "telecom_create_schema",
-          "retryable": true
+          "retryable": true,
+          "timeout_ms": 10000
         }
       ]
     },
@@ -180,27 +190,28 @@
         }
       },
       "context_resolver": {
-        "description": "Validate that the Patient exists and hydrate the latest Patient resource before appending address information.",
+        "description": "Confirm the Patient still exists in the database before appending an address — guards against partial completion if the user previously exited mid-workflow.",
         "tool_name": "get_patient_by_id",
-        "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id",
-        "method": "GET"
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
       },
       "ui": {
         "schema": "patient_address_form",
-        "mode": "create",
+        "mode": "append",
         "prefill": false,
-        "editable": true,
-        "submit_label": "Add Address"
+        "editable": true
       },
       "actions": [
         {
           "type": "http",
           "purpose": "add_patient_address",
           "tool_name": "add_patient_address",
-          "url": "http://localhost:8001/api/fhir/v1/patients/$patient_id/addresses",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/addresses",
           "method": "POST",
           "validation_schema": "address_create_schema",
-          "retryable": true
+          "retryable": true,
+          "timeout_ms": 10000
         }
       ]
     }

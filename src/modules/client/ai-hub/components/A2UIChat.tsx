@@ -22,7 +22,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { createMessageProcessor } from "../a2ui/rendering/processor";
 import { Renderer } from "../a2ui/rendering/renderer";
-import type { AnyComponentNode } from "../a2ui/types";
+import type { AnyComponentNode, MarkdownNode } from "../a2ui/types";
 import { parseUI } from "../utils/mapUiSchemaDataV3";
 import { UI_SCHEMA_REGISTRY } from "../schemas/ui";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,15 @@ import type {
   WorkflowDefinition,
   WorkflowStepDefinition,
 } from "@/types/workflow";
+
+/** Wraps a plain string into a Markdown component node for rendering via <Renderer>. */
+function buildMarkdownNode(content: string): MarkdownNode {
+  return {
+    id: crypto.randomUUID(),
+    type: "Markdown",
+    properties: { content: { literalString: content } },
+  };
+}
 
 // Single processor instance shared across all surfaces in this chat session.
 // The processor maintains per-surface component trees and data models so that
@@ -112,7 +121,7 @@ export default function A2UIChatPage() {
           addMessage({
             id: crypto.randomUUID(),
             role: "assistant",
-            text: `⚠️ ${data.message}`,
+            ui: buildMarkdownNode(`⚠️ ${data.message}`),
           });
           return;
         }
@@ -125,10 +134,9 @@ export default function A2UIChatPage() {
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          text: !parsedUi
-            ? `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`
-            : undefined,
-          ui: parsedUi,
+          ui: parsedUi ?? buildMarkdownNode(
+            `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`,
+          ),
           workflowSnapshot: {
             workflowId: workflow.id,
             stepIndex,
@@ -143,7 +151,7 @@ export default function A2UIChatPage() {
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          text: `⚠️ Failed to load step: ${err instanceof Error ? err.message : "Unknown error"}`,
+          ui: buildMarkdownNode(`⚠️ Failed to load step: ${err instanceof Error ? err.message : "Unknown error"}`),
         });
       } finally {
         setLoading(false);
@@ -160,12 +168,27 @@ export default function A2UIChatPage() {
   const skipCurrentStep = useCallback(async () => {
     if (!activeWorkflow || currentStepIndex === null) return;
     const steps = getSortedSteps(activeWorkflow);
+    const skippedStep = steps[currentStepIndex];
     const nextIndex =
       currentStepIndex + 1 < steps.length ? currentStepIndex + 1 : null;
+
+    addMessage({
+      id: crypto.randomUUID(),
+      role: "assistant",
+      ui: buildMarkdownNode(`**${skippedStep.name}** was skipped. This step cannot be revisited in the current session.`),
+    });
+
     if (nextIndex !== null) {
       setWorkflow(activeWorkflow, nextIndex);
       await loadWorkflowStep(activeWorkflow, nextIndex, sessionContext);
     } else {
+      if (activeWorkflow.completion?.message) {
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          ui: buildMarkdownNode(activeWorkflow.completion.message),
+        });
+      }
       clearSession();
     }
   }, [
@@ -257,6 +280,13 @@ export default function A2UIChatPage() {
               data.sessionContext ?? {},
             );
           } else {
+            if (currentWorkflow.completion?.message) {
+              addMessage({
+                id: crypto.randomUUID(),
+                role: "assistant",
+                ui: buildMarkdownNode(currentWorkflow.completion.message),
+              });
+            }
             clearSession();
           }
         } else {
@@ -321,16 +351,24 @@ export default function A2UIChatPage() {
         const workflow: WorkflowDefinition = data.workflow;
         const step: WorkflowStepDefinition = data.step;
         const stepIndex: number = data.stepIndex ?? 0;
+
+        if (workflow.introduction) {
+          addMessage({
+            id: crypto.randomUUID(),
+            role: "assistant",
+            ui: buildMarkdownNode(workflow.introduction),
+          });
+        }
+
         const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
         const parsedUi = buildUiFromData(uiSchema, data.stepData);
 
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          text: !parsedUi
-            ? `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`
-            : undefined,
-          ui: parsedUi,
+          ui: parsedUi ?? buildMarkdownNode(
+            `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`,
+          ),
           workflowSnapshot: {
             workflowId: workflow.id,
             stepIndex,
@@ -345,26 +383,26 @@ export default function A2UIChatPage() {
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          text: data.message,
+          ui: buildMarkdownNode(data.message),
         });
       } else if (data.type === "error") {
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          text: `⚠️ ${data.message}`,
+          ui: buildMarkdownNode(`⚠️ ${data.message}`),
         });
       } else {
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          text: JSON.stringify(data),
+          ui: buildMarkdownNode(JSON.stringify(data, null, 2)),
         });
       }
     } catch (err) {
       addMessage({
         id: crypto.randomUUID(),
         role: "assistant",
-        text: `⚠️ Network error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        ui: buildMarkdownNode(`⚠️ Network error: ${err instanceof Error ? err.message : "Unknown error"}`),
       });
     } finally {
       setLoading(false);

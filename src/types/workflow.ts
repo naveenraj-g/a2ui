@@ -7,13 +7,19 @@ export interface WorkflowDefinition {
   llm_hints?: {
     intent_examples?: string[];
     when_to_use?: string[];
+    when_not_to_use?: string[];
     required_context?: string[];
   };
   execution?: {
     mode: string;
     orchestrator: string;
-    retryable: boolean;
+    retryable?: boolean;
     audit_enabled: boolean;
+  };
+  introduction?: string;
+  completion?: {
+    message: string;
+    action?: "dismiss";
   };
   workflow_steps: WorkflowStepDefinition[];
 }
@@ -34,13 +40,14 @@ export interface WorkflowStepDefinition {
     tool_name: string;
     url: string;
     method: "GET" | "POST";
+    timeout_ms?: number;
   };
   ui: {
     schema: string;
-    mode: "create" | "edit" | "view";
+    mode: "create" | "edit" | "view" | "append";
     prefill: boolean;
     editable: boolean;
-    submit_label: string;
+    submit_label?: string;
   };
   actions: WorkflowAction[];
 }
@@ -65,4 +72,5 @@ export interface WorkflowAction {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   validation_schema?: string;
   retryable: boolean;
+  timeout_ms?: number;
 }
