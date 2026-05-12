@@ -24,7 +24,12 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getJWTToken, sortedSteps, runContextResolver } from "./_lib";
+import {
+  getJWTToken,
+  sortedSteps,
+  runContextResolver,
+  extractOutputs,
+} from "./_lib";
 import create_patient_workflow from "@/modules/client/ai-hub/workflows/patient/create_patient.json";
 
 const AGENT_API_URL = process.env.AGENT_API_URL!;
@@ -64,7 +69,7 @@ export async function POST(req: Request) {
     // }
 
     // const workflow: WorkflowDefinition = await agentRes.json();
-    const workflow: WorkflowDefinition = await create_patient_workflow;
+    const workflow: WorkflowDefinition = create_patient_workflow;
 
     // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);
@@ -88,7 +93,13 @@ export async function POST(req: Request) {
         mergedContext,
         token,
       );
-      mergedContext = { ...mergedContext, ...stepData };
+      // Also apply context.outputs to map raw response fields to named context keys
+      // (e.g. response.id → patient_id). This lets context steps pass typed values
+      // to subsequent steps without relying on raw field names.
+      const extracted = firstStep.context?.outputs
+        ? extractOutputs(firstStep.context.outputs, stepData)
+        : {};
+      mergedContext = { ...mergedContext, ...stepData, ...extracted };
     }
 
     return Response.json({

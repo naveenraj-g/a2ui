@@ -128,8 +128,28 @@ export default function A2UIChatPage() {
 
         const step: WorkflowStepDefinition =
           data.step ?? getSortedSteps(workflow)[stepIndex];
+
+        if (data.sessionContext) mergeContext(data.sessionContext);
+
+        // "context" steps resolve data silently and auto-advance to the next step.
+        // They never render UI or pause for user input.
+        if (step.step_type === "context") {
+          const steps = getSortedSteps(workflow);
+          const nextIndex = stepIndex + 1 < steps.length ? stepIndex + 1 : null;
+          if (nextIndex !== null) {
+            setWorkflow(workflow, nextIndex);
+            await loadWorkflowStep(workflow, nextIndex, data.sessionContext ?? ctx);
+          } else {
+            if (workflow.completion?.message) {
+              addMessage({ id: crypto.randomUUID(), role: "assistant", ui: buildMarkdownNode(workflow.completion.message) });
+            }
+            clearSession();
+          }
+          return;
+        }
+
         const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
-        const parsedUi = buildUiFromData(uiSchema, data.stepData);
+        const parsedUi = buildUiFromData(uiSchema, { ...(data.stepData ?? {}), ...(data.sessionContext ?? {}) });
 
         addMessage({
           id: crypto.randomUUID(),
@@ -145,7 +165,6 @@ export default function A2UIChatPage() {
           },
         });
 
-        if (data.sessionContext) mergeContext(data.sessionContext);
         setWorkflow(workflow, stepIndex);
       } catch (err) {
         addMessage({
@@ -360,8 +379,21 @@ export default function A2UIChatPage() {
           });
         }
 
+        if (data.sessionContext) mergeContext(data.sessionContext);
+
+        // If the first step is a context step, auto-advance to the next one.
+        if (step.step_type === "context") {
+          const steps = getSortedSteps(workflow);
+          const nextIndex = stepIndex + 1 < steps.length ? stepIndex + 1 : null;
+          if (nextIndex !== null) {
+            setWorkflow(workflow, nextIndex);
+            await loadWorkflowStep(workflow, nextIndex, data.sessionContext ?? {});
+          }
+          return;
+        }
+
         const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
-        const parsedUi = buildUiFromData(uiSchema, data.stepData);
+        const parsedUi = buildUiFromData(uiSchema, { ...(data.stepData ?? {}), ...(data.sessionContext ?? {}) });
 
         addMessage({
           id: crypto.randomUUID(),
@@ -377,7 +409,6 @@ export default function A2UIChatPage() {
           },
         });
 
-        if (data.sessionContext) mergeContext(data.sessionContext);
         setWorkflow(workflow, stepIndex);
       } else if (data.type === "text" || data.type === "fallback") {
         addMessage({

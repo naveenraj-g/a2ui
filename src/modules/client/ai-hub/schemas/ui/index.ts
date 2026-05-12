@@ -2,6 +2,8 @@ import patientCreateForm from "./patient_create_form.json";
 import patientIdentifierForm from "./patient_identifier_form.json";
 import patientTelecomForm from "./patient_telecom_form.json";
 import patientAddressForm from "./patient_address_form.json";
+import vitalsDashboard from "./vitals_dashboard.json";
+import vitalsTable from "./vitals_table.json";
 
 /** Maps the workflow step's ui.schema name to the component tree JSON. */
 export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
@@ -9,4 +11,6 @@ export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
   patient_identifier_form: patientIdentifierForm,
   patient_telecom_form: patientTelecomForm,
   patient_address_form: patientAddressForm,
+  vitals_dashboard: vitalsDashboard,
+  vitals_table: vitalsTable,
 };

@@ -24,7 +24,7 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getJWTToken, sortedSteps, runContextResolver } from "../_lib";
+import { getJWTToken, sortedSteps, runContextResolver, extractOutputs } from "../_lib";
 
 export async function POST(req: Request) {
   const {
@@ -55,8 +55,10 @@ export async function POST(req: Request) {
     // confirm it still exists before rendering the address form.
     if (step.context_resolver) {
       stepData = await runContextResolver(step.context_resolver, mergedContext, token);
-      // Merge so downstream URL templates in the same step can reference fetched fields.
-      mergedContext = { ...mergedContext, ...stepData };
+      const extracted = step.context?.outputs
+        ? extractOutputs(step.context.outputs, stepData)
+        : {};
+      mergedContext = { ...mergedContext, ...stepData, ...extracted };
     }
 
     return Response.json({

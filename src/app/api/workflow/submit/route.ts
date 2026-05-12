@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   // Prefer the action whose tool_name matches the dispatched actionName,
   // but fall back to the first action for steps with a single action.
   const action =
-    step.actions.find((a) => a.tool_name === actionName) ?? step.actions[0];
+    step.actions?.find((a) => a.tool_name === actionName) ?? step.actions?.[0];
 
   if (!action) {
     return Response.json(
@@ -85,7 +85,6 @@ export async function POST(req: Request) {
 
   try {
     const token = await getJWTToken();
-    console.log(token);
 
     // A2UI forms serialise their field values as a JSON string inside
     // context.formData. Parse it back if that's what arrived.
@@ -124,7 +123,9 @@ export async function POST(req: Request) {
       // GET requests must not carry a body per HTTP spec.
       body: action.method !== "GET" ? JSON.stringify(cleaned) : undefined,
       cache: "no-store",
-      signal: action.timeout_ms ? AbortSignal.timeout(action.timeout_ms) : undefined,
+      signal: action.timeout_ms
+        ? AbortSignal.timeout(action.timeout_ms)
+        : undefined,
     });
 
     if (!res.ok) {
@@ -139,7 +140,7 @@ export async function POST(req: Request) {
 
     // Pull declared output fields from the FHIR response and merge them into
     // sessionContext so later steps can reference them (e.g. patient_id for URL params).
-    const outputs = extractOutputs(step.context.outputs, data);
+    const outputs = step.context ? extractOutputs(step.context.outputs, data) : {};
     const updatedContext = { ...sessionContext, ...cleaned, ...outputs };
 
     // null means this was the last step in the workflow.

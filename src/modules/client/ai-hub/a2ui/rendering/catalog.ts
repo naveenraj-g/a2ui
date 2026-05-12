@@ -17,7 +17,6 @@ import { Divider } from "../catalog/divider";
 import { Video } from "../catalog/video";
 import { AudioPlayer } from "../catalog/audio-player";
 import { Table } from "../catalog/table";
-// import Chart from "../catalog/chart";
 import { Form } from "../catalog/form";
 import { Switch } from "../catalog/switch";
 import { RadioGroup } from "../catalog/radio-group";
@@ -32,6 +31,13 @@ import { SearchField } from "../catalog/search-field";
 import { Link } from "../catalog/link";
 import { Separator } from "../catalog/separator";
 import { Markdown } from "../catalog/markdown";
+import { BarChart } from "../catalog/bar-chart";
+import { LineChart } from "../catalog/line-chart";
+import { AreaChart } from "../catalog/area-chart";
+import { PieChart } from "../catalog/pie-chart";
+import { DashboardCard } from "../catalog/dashboard-card";
+import { Metric } from "../catalog/metric";
+import { DataTable } from "../catalog/data-table";
 
 export type ComponentConfig = {
   component: React.ComponentType<any>;
@@ -61,7 +67,6 @@ export const DEFAULT_CATALOG: Catalog = {
   Video: { component: Video },
   AudioPlayer: { component: AudioPlayer },
   Table: { component: Table },
-  // Chart: { component: Chart },
   Form: { component: Form },
   Switch: { component: Switch },
   RadioGroup: { component: RadioGroup },
@@ -76,4 +81,11 @@ export const DEFAULT_CATALOG: Catalog = {
   Link: { component: Link },
   Separator: { component: Separator },
   Markdown: { component: Markdown },
+  BarChart: { component: BarChart },
+  LineChart: { component: LineChart },
+  AreaChart: { component: AreaChart },
+  PieChart: { component: PieChart },
+  DashboardCard: { component: DashboardCard },
+  Metric: { component: Metric },
+  DataTable: { component: DataTable },
 };

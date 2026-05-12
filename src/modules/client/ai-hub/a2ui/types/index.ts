@@ -334,6 +334,7 @@ interface BaseComponentNode {
   weight?: number;
   dataContextPath?: string;
   slotName?: string;
+  className?: string;
 }
 
 export interface TextNode extends BaseComponentNode {
@@ -524,6 +525,153 @@ export interface CustomNode extends BaseComponentNode {
   properties: { [key: string]: ResolvedValue };
 }
 
+// ── Chart types ─────────────────────────────────────────────────────────────
+
+export interface ChartSeries {
+  key: string;
+  name?: string;
+  color?: string;
+}
+
+export interface BarChartType {
+  data: Array<Record<string, any>>;
+  series: ChartSeries[];
+  xKey?: string;
+  height?: number;
+  showGrid?: boolean;
+  showLegend?: boolean;
+  stacked?: boolean;
+  exportable?: boolean;
+  title?: string;
+}
+
+export interface LineChartType {
+  data: Array<Record<string, any>>;
+  series: ChartSeries[];
+  xKey?: string;
+  height?: number;
+  showGrid?: boolean;
+  showLegend?: boolean;
+  exportable?: boolean;
+  title?: string;
+}
+
+export interface AreaChartType {
+  data: Array<Record<string, any>>;
+  series: ChartSeries[];
+  xKey?: string;
+  height?: number;
+  showGrid?: boolean;
+  showLegend?: boolean;
+  stacked?: boolean;
+  fillOpacity?: number;
+  exportable?: boolean;
+  title?: string;
+}
+
+export interface PieChartType {
+  data: Array<{ label: string; value: number; color?: string }>;
+  innerRadius?: number;
+  height?: number;
+  showLegend?: boolean;
+  exportable?: boolean;
+  title?: string;
+}
+
+export interface BarChartNode extends BaseComponentNode {
+  type: "BarChart";
+  properties: BarChartType;
+}
+
+export interface LineChartNode extends BaseComponentNode {
+  type: "LineChart";
+  properties: LineChartType;
+}
+
+export interface AreaChartNode extends BaseComponentNode {
+  type: "AreaChart";
+  properties: AreaChartType;
+}
+
+export interface PieChartNode extends BaseComponentNode {
+  type: "PieChart";
+  properties: PieChartType;
+}
+
+// ── Dashboard components ─────────────────────────────────────────────────────
+
+export interface DashboardCardType {
+  title: string;
+  subtitle?: string;
+}
+
+export interface DashboardCardNode extends BaseComponentNode {
+  type: "DashboardCard";
+  properties: DashboardCardType & { child?: AnyComponentNode };
+}
+
+export interface MetricType {
+  label: string;
+  value: string;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string;
+}
+
+export interface MetricNode extends BaseComponentNode {
+  type: "Metric";
+  properties: MetricType;
+}
+
+// ── DataTable ────────────────────────────────────────────────────────────────
+
+export interface DataTableColumn {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  width?: string;
+}
+
+export interface DataTableQueryParams {
+  supported: string[];
+  defaults: Record<string, any>;
+  pageParam?: string;
+  offsetParam?: string;
+  limitParam?: string;
+  sortParam?: string;
+  searchParam?: string;
+  totalPath?: string;
+  dataPath?: string;
+  rowMapping?: Record<string, string>;
+  maxExportLimit?: number;
+  filterLabels?: Record<string, string>;
+}
+
+export interface DataTablePaginationConfig {
+  page: number;
+  pageSize: number;
+  total: number;
+  pageSizeOptions?: number[];
+}
+
+export interface DataTableType {
+  columns: DataTableColumn[];
+  rows: Array<Record<string, any>>;
+  pagination?: DataTablePaginationConfig;
+  url?: string;
+  queryParams?: DataTableQueryParams;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  exportFormats?: Array<"csv" | "json" | "xlsx" | "pdf">;
+  title?: string;
+}
+
+export interface DataTableNode extends BaseComponentNode {
+  type: "DataTable";
+  properties: DataTableType;
+}
+
+// ── AnyComponentNode union ───────────────────────────────────────────────────
+
 export type AnyComponentNode =
   | MarkdownNode
   | TextNode
@@ -559,7 +707,14 @@ export type AnyComponentNode =
   | BreadcrumbNode
   | SearchFieldNode
   | LinkNode
-  | SeparatorNode;
+  | SeparatorNode
+  | BarChartNode
+  | LineChartNode
+  | AreaChartNode
+  | PieChartNode
+  | DashboardCardNode
+  | MetricNode
+  | DataTableNode;
 
 export interface Theme {
   components: {

@@ -28,28 +28,29 @@ export interface WorkflowStepDefinition {
   sequence_number: number;
   id: string;
   name: string;
-  step_type: "form" | "view" | "confirm";
+  step_type: "form" | "view" | "confirm" | "context";
   optional?: boolean;
   description: string;
-  context: {
+  context?: {
     inputs: Record<string, StepContextInput>;
     outputs: Record<string, StepContextOutput>;
   };
   context_resolver?: {
-    description: string;
+    description?: string;
+    context_key?: string;
     tool_name: string;
     url: string;
     method: "GET" | "POST";
     timeout_ms?: number;
   };
-  ui: {
+  ui?: {
     schema: string;
-    mode: "create" | "edit" | "view" | "append";
-    prefill: boolean;
-    editable: boolean;
+    mode?: "create" | "edit" | "view" | "append";
+    prefill?: boolean;
+    editable?: boolean;
     submit_label?: string;
   };
-  actions: WorkflowAction[];
+  actions?: WorkflowAction[];
 }
 
 export interface StepContextInput {

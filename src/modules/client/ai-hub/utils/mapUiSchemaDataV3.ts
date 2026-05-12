@@ -1,3 +1,5 @@
+import { applyTransform, type TransformSpec } from "./transform"
+
 type AnyObject = Record<string, any>
 
 /**
@@ -82,6 +84,18 @@ export const mapDataToUI = (ui: any, data: AnyObject): any => {
 
   // handle objects
   if (ui !== null && typeof ui === "object") {
+    // $transform directive: { "$transform": { from: "$path", type: "...", ... } }
+    if ("$transform" in ui) {
+      const spec = ui.$transform
+      if (spec && typeof spec === "object" && typeof spec.from === "string") {
+        const sourcePath = (spec.from as string).replace(/^\$/, "")
+        const source = getValue(data, sourcePath)
+        const { from: _from, ...transformSpec } = spec
+        return applyTransform(source, transformSpec as TransformSpec)
+      }
+      return null
+    }
+
     // LOOP HANDLING
     if (ui.forEach && ui.item && ui.component) {
 

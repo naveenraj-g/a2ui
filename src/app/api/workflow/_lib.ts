@@ -38,7 +38,7 @@ export function sortedSteps(steps: WorkflowStepDefinition[]): WorkflowStepDefini
  * placeholders in the URL.
  */
 export function resolveUrl(template: string, context: Record<string, unknown>): string {
-  const merged = {
+  const merged: Record<string, unknown> = {
     fhir_server_url: process.env.FHIR_SERVER_URL ?? "",
     ...context,
   };
@@ -108,5 +108,6 @@ export async function runContextResolver(
     signal: resolver.timeout_ms ? AbortSignal.timeout(resolver.timeout_ms) : undefined,
   });
   if (!res.ok) throw new Error(`Context resolver failed: ${res.status}`);
-  return res.json();
+  const body = await res.json();
+  return resolver.context_key ? { [resolver.context_key]: body } : body;
 }
