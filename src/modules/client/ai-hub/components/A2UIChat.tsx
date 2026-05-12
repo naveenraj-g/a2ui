@@ -138,10 +138,18 @@ export default function A2UIChatPage() {
           const nextIndex = stepIndex + 1 < steps.length ? stepIndex + 1 : null;
           if (nextIndex !== null) {
             setWorkflow(workflow, nextIndex);
-            await loadWorkflowStep(workflow, nextIndex, data.sessionContext ?? ctx);
+            await loadWorkflowStep(
+              workflow,
+              nextIndex,
+              data.sessionContext ?? ctx,
+            );
           } else {
             if (workflow.completion?.message) {
-              addMessage({ id: crypto.randomUUID(), role: "assistant", ui: buildMarkdownNode(workflow.completion.message) });
+              addMessage({
+                id: crypto.randomUUID(),
+                role: "assistant",
+                ui: buildMarkdownNode(workflow.completion.message),
+              });
             }
             clearSession();
           }
@@ -149,14 +157,19 @@ export default function A2UIChatPage() {
         }
 
         const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
-        const parsedUi = buildUiFromData(uiSchema, { ...(data.stepData ?? {}), ...(data.sessionContext ?? {}) });
+        const parsedUi = buildUiFromData(uiSchema, {
+          ...(data.stepData ?? {}),
+          ...(data.sessionContext ?? {}),
+        });
 
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          ui: parsedUi ?? buildMarkdownNode(
-            `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`,
-          ),
+          ui:
+            parsedUi ??
+            buildMarkdownNode(
+              `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`,
+            ),
           workflowSnapshot: {
             workflowId: workflow.id,
             stepIndex,
@@ -170,7 +183,9 @@ export default function A2UIChatPage() {
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          ui: buildMarkdownNode(`⚠️ Failed to load step: ${err instanceof Error ? err.message : "Unknown error"}`),
+          ui: buildMarkdownNode(
+            `⚠️ Failed to load step: ${err instanceof Error ? err.message : "Unknown error"}`,
+          ),
         });
       } finally {
         setLoading(false);
@@ -194,7 +209,9 @@ export default function A2UIChatPage() {
     addMessage({
       id: crypto.randomUUID(),
       role: "assistant",
-      ui: buildMarkdownNode(`**${skippedStep.name}** was skipped. This step cannot be revisited in the current session.`),
+      ui: buildMarkdownNode(
+        `**${skippedStep.name}** was skipped. This step cannot be revisited in the current session.`,
+      ),
     });
 
     if (nextIndex !== null) {
@@ -387,20 +404,29 @@ export default function A2UIChatPage() {
           const nextIndex = stepIndex + 1 < steps.length ? stepIndex + 1 : null;
           if (nextIndex !== null) {
             setWorkflow(workflow, nextIndex);
-            await loadWorkflowStep(workflow, nextIndex, data.sessionContext ?? {});
+            await loadWorkflowStep(
+              workflow,
+              nextIndex,
+              data.sessionContext ?? {},
+            );
           }
           return;
         }
 
         const uiSchema = UI_SCHEMA_REGISTRY[step.ui?.schema ?? ""] ?? null;
-        const parsedUi = buildUiFromData(uiSchema, { ...(data.stepData ?? {}), ...(data.sessionContext ?? {}) });
+        const parsedUi = buildUiFromData(uiSchema, {
+          ...(data.stepData ?? {}),
+          ...(data.sessionContext ?? {}),
+        });
 
         addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
-          ui: parsedUi ?? buildMarkdownNode(
-            `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`,
-          ),
+          ui:
+            parsedUi ??
+            buildMarkdownNode(
+              `**${step.name}**${step.optional ? " (optional)" : ""} — ${step.description}`,
+            ),
           workflowSnapshot: {
             workflowId: workflow.id,
             stepIndex,
@@ -433,7 +459,9 @@ export default function A2UIChatPage() {
       addMessage({
         id: crypto.randomUUID(),
         role: "assistant",
-        ui: buildMarkdownNode(`⚠️ Network error: ${err instanceof Error ? err.message : "Unknown error"}`),
+        ui: buildMarkdownNode(
+          `⚠️ Network error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        ),
       });
     } finally {
       setLoading(false);
