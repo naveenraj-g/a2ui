@@ -1,3 +1,17 @@
+/**
+ * Chat store — Zustand state for the A2UI workflow chat session.
+ *
+ * Holds three categories of state:
+ *
+ *   UI state       messages[], input, loading
+ *   Workflow state activeWorkflow (full WorkflowDefinition), currentStepIndex
+ *   Session state  sessionContext — flat key-value map accumulated across steps.
+ *                  e.g. { patient_id: 42 } is set after step 1 completes so
+ *                  steps 2–4 can interpolate it into their FHIR action URLs.
+ *
+ * The full WorkflowDefinition is re-sent to the server with every /step and
+ * /submit call — no server-side workflow state is kept between requests.
+ */
 import { create } from "zustand";
 import type { AnyComponentNode } from "../a2ui/types";
 import type { WorkflowDefinition } from "@/types/workflow";

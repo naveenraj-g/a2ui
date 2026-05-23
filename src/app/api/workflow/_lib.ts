@@ -10,7 +10,7 @@
  * so it always reflects the caller's identity and expiry.
  */
 
-import type { WorkflowStepDefinition, StepContextOutput } from "@/types/workflow";
+import type { WorkflowStepDefinition, StepContextOutput, ContextResolverDef } from "@/types/workflow";
 import { getJWTToken } from "@/modules/server/auth/jwt-token";
 
 // Re-export so route files only need to import from this one file.
@@ -81,6 +81,22 @@ export function cleanFormData(data: Record<string, unknown>): Record<string, unk
     }
   }
   return cleaned;
+}
+
+/**
+ * Runs multiple context resolvers in parallel and merges all results into a
+ * single flat object. Each resolver writes under its own `context_key` (or
+ * directly at the top level when `context_key` is absent).
+ */
+export async function runContextResolvers(
+  resolvers: ContextResolverDef[],
+  sessionContext: Record<string, unknown>,
+  token: string,
+): Promise<Record<string, unknown>> {
+  const results = await Promise.all(
+    resolvers.map((r) => runContextResolver(r, sessionContext, token)),
+  );
+  return Object.assign({}, ...results);
 }
 
 /**

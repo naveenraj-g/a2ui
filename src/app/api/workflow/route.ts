@@ -28,8 +28,11 @@ import {
   getJWTToken,
   sortedSteps,
   runContextResolver,
+  runContextResolvers,
   extractOutputs,
 } from "./_lib";
+
+// ** Testing **
 import create_patient_workflow from "@/modules/client/ai-hub/workflows/patient/create_patient.json";
 import view_vitals_dashboard from "@/modules/client/ai-hub/workflows/vitals/view_vitals_dashboard.json";
 import view_vitals_table from "@/modules/client/ai-hub/workflows/vitals/view_vitals_table.json";
@@ -62,7 +65,12 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({
+        query: message,
+        session_id:
+          (sessionContext.session_id as string | undefined) ??
+          crypto.randomUUID(),
+      }),
       cache: "no-store",
     });
 
@@ -71,7 +79,9 @@ export async function POST(req: Request) {
     }
 
     const workflow: WorkflowDefinition = await agentRes.json();
-    // const workflow: WorkflowDefinition = view_vitals_table;
+
+    // ** Testing **
+    // const workflow: WorkflowDefinition = create_patient_workflow;
 
     // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);
@@ -87,17 +97,25 @@ export async function POST(req: Request) {
     let stepData: Record<string, unknown> = {};
     let mergedContext = { ...sessionContext };
 
-    // Some steps need to pre-fetch a resource before showing the form
-    // (e.g. the update-patient step fetches the current Patient record).
-    if (firstStep.context_resolver) {
+    // Some steps need to pre-fetch a resource before showing the form.
+    // context_resolvers (plural) runs multiple fetches in parallel;
+    // context_resolver (singular) is the legacy single-fetch path.
+    if (firstStep.context_resolvers?.length) {
+      stepData = await runContextResolvers(
+        firstStep.context_resolvers,
+        mergedContext,
+        token,
+      );
+      const extracted = firstStep.context?.outputs
+        ? extractOutputs(firstStep.context.outputs, stepData)
+        : {};
+      mergedContext = { ...mergedContext, ...stepData, ...extracted };
+    } else if (firstStep.context_resolver) {
       stepData = await runContextResolver(
         firstStep.context_resolver,
         mergedContext,
         token,
       );
-      // Also apply context.outputs to map raw response fields to named context keys
-      // (e.g. response.id → patient_id). This lets context steps pass typed values
-      // to subsequent steps without relying on raw field names.
       const extracted = firstStep.context?.outputs
         ? extractOutputs(firstStep.context.outputs, stepData)
         : {};

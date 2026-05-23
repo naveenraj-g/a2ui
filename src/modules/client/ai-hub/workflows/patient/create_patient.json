@@ -55,6 +55,24 @@
           }
         }
       },
+      "context_resolvers": [
+        {
+          "description": "Fetch administrative-gender value set for the Gender select.",
+          "context_key": "gender_concepts",
+          "tool_name": "get_gender_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=gender",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch marital-status value set for the Marital Status select.",
+          "context_key": "marital_status_concepts",
+          "tool_name": "get_marital_status_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=maritalStatus",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
       "ui": {
         "schema": "patient_create_form",
         "mode": "create",

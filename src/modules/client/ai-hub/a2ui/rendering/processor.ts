@@ -1,3 +1,22 @@
+/**
+ * Message processor — the event bus and data store shared across a chat session.
+ *
+ * One instance is created by A2UIChat and passed as `processor` prop to every
+ * <Renderer> and catalog component.
+ *
+ * Two responsibilities:
+ *
+ *   1. Data model — per-surface key-value store for server-driven rendering
+ *      (the legacy push mode where the server sends component updates over SSE).
+ *      In workflow mode this store stays empty; all data comes pre-resolved
+ *      through mapDataToUI before components render.
+ *
+ *   2. Dispatch bridge — when a Form fires sendAction(), it calls
+ *      processor.dispatch(message) which emits a "dispatch" event.
+ *      A2UIChat listens for this event, calls /api/workflow/submit, then
+ *      resolves the Promise returned by dispatch() so the Form component
+ *      knows the submission completed.
+ */
 import type {
   AnyComponentNode,
   ServerToClientMessage,

@@ -24,7 +24,7 @@
  */
 
 import type { WorkflowDefinition } from "@/types/workflow";
-import { getJWTToken, sortedSteps, runContextResolver, extractOutputs } from "../_lib";
+import { getJWTToken, sortedSteps, runContextResolver, runContextResolvers, extractOutputs } from "../_lib";
 
 export async function POST(req: Request) {
   const {
@@ -50,10 +50,13 @@ export async function POST(req: Request) {
     let stepData: Record<string, unknown> = {};
     let mergedContext = { ...sessionContext };
 
-    // Run the context_resolver if this step requires pre-fetched FHIR data.
-    // For example, the "Add Address" step re-fetches the Patient resource to
-    // confirm it still exists before rendering the address form.
-    if (step.context_resolver) {
+    if (step.context_resolvers?.length) {
+      stepData = await runContextResolvers(step.context_resolvers, mergedContext, token);
+      const extracted = step.context?.outputs
+        ? extractOutputs(step.context.outputs, stepData)
+        : {};
+      mergedContext = { ...mergedContext, ...stepData, ...extracted };
+    } else if (step.context_resolver) {
       stepData = await runContextResolver(step.context_resolver, mergedContext, token);
       const extracted = step.context?.outputs
         ? extractOutputs(step.context.outputs, stepData)

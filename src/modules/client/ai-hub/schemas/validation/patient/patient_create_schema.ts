@@ -8,4 +8,8 @@ export const patientCreateSchema = z.object({
   active: z.boolean().optional(),
   deceased_boolean: z.boolean().optional(),
   deceased_datetime: z.string().optional(),
+  marital_status_code: z.string().optional(),
+  marital_status_system: z.string().optional(),
+  marital_status_display: z.string().optional(),
+  marital_status_text: z.string().optional(),
 });

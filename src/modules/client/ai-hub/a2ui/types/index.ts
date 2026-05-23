@@ -118,6 +118,23 @@ export interface MultipleChoice {
   maxAllowedSelections?: number;
 }
 
+export interface TerminologySelectServerSearch {
+  resource: string;
+  field: string;
+  minChars?: number;
+  debounceMs?: number;
+}
+
+export interface TerminologySelectType {
+  label?: StringValue;
+  placeholder?: StringValue;
+  /** Resolved array of FHIR concept objects — populated via $variable by mapDataToUI. */
+  items?: any;
+  /** "code" emits a single hidden input; "CodeableConcept" emits four flattened inputs. */
+  valueType?: StringValue;
+  serverSearch?: TerminologySelectServerSearch;
+}
+
 export interface Tabs {
   tabItems: Array<{ title: StringValue; child: AnyComponentNode }>;
 }
@@ -490,6 +507,11 @@ export interface MultipleChoiceNode extends BaseComponentNode {
   properties: MultipleChoice;
 }
 
+export interface TerminologySelectNode extends BaseComponentNode {
+  type: "TerminologySelect";
+  properties: TerminologySelectType;
+}
+
 export interface SliderNode extends BaseComponentNode {
   type: "Slider";
   properties: Slider;
@@ -675,6 +697,7 @@ export interface DataTableNode extends BaseComponentNode {
 export type AnyComponentNode =
   | MarkdownNode
   | TextNode
+  | TerminologySelectNode
   | IconNode
   | ImageNode
   | VideoNode

@@ -24,6 +24,15 @@ export interface WorkflowDefinition {
   workflow_steps: WorkflowStepDefinition[];
 }
 
+export interface ContextResolverDef {
+  description?: string;
+  context_key?: string;
+  tool_name: string;
+  url: string;
+  method: "GET" | "POST";
+  timeout_ms?: number;
+}
+
 export interface WorkflowStepDefinition {
   sequence_number: number;
   id: string;
@@ -35,14 +44,10 @@ export interface WorkflowStepDefinition {
     inputs: Record<string, StepContextInput>;
     outputs: Record<string, StepContextOutput>;
   };
-  context_resolver?: {
-    description?: string;
-    context_key?: string;
-    tool_name: string;
-    url: string;
-    method: "GET" | "POST";
-    timeout_ms?: number;
-  };
+  /** Single resolver — kept for backward compatibility. */
+  context_resolver?: ContextResolverDef;
+  /** Multiple resolvers executed in parallel; results are merged into stepData. */
+  context_resolvers?: ContextResolverDef[];
   ui?: {
     schema: string;
     mode?: "create" | "edit" | "view" | "append";

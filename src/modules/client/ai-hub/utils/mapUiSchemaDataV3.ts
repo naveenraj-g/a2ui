@@ -1,3 +1,16 @@
+/**
+ * mapUiSchemaDataV3 — declarative schema-to-component-tree resolver.
+ *
+ * Takes a raw UI schema JSON object and a data object (stepData + sessionContext
+ * merged together by A2UIChat.buildUiFromData) and walks the schema tree,
+ * replacing every "$variable" string with the corresponding value from data.
+ *
+ * Called once per step render, before any React component sees the schema.
+ * After this runs, the component tree contains real values — no "$..." strings.
+ *
+ * Entry point: parseUI(JSON.stringify({ ui, data }))
+ */
+
 import { applyTransform, type TransformSpec } from "./transform"
 
 type AnyObject = Record<string, any>
@@ -58,7 +71,16 @@ const resolveVariable = (expr: string, data: AnyObject) => {
 }
 
 /**
- * Main recursive mapper
+ * Recursively walks the UI schema and resolves all $variable references.
+ *
+ * Processing order:
+ *   1. String "$var"         → exact variable lookup (returns the real value, any type)
+ *   2. String "text $var"    → interpolated string (replaces $vars within surrounding text)
+ *   3. { $transform: {...} } → runs applyTransform() for data pipelines (charts, KPIs)
+ *   4. { forEach, item, component } → expands an array into repeated component nodes
+ *   5. Array                 → recurse each element
+ *   6. Object                → recurse each value
+ *   7. Primitive             → returned unchanged
  */
 export const mapDataToUI = (ui: any, data: AnyObject): any => {
   // handle string variables
@@ -128,7 +150,11 @@ export const mapDataToUI = (ui: any, data: AnyObject): any => {
 }
 
 /**
- * Parse AI response
+ * Entry point called by A2UIChat.buildUiFromData.
+ * Expects input = JSON.stringify({ ui, data }).
+ *
+ * POST / create mode → ui only, data is null → returns schema as-is (no variable resolution)
+ * GET / view mode   → ui + data → resolves all $variables and returns a ready-to-render tree
  */
 export const parseUI = (input: any) => {
   if (!input) return null

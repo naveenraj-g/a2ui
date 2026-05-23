@@ -38,6 +38,7 @@ import { PieChart } from "../catalog/pie-chart";
 import { DashboardCard } from "../catalog/dashboard-card";
 import { Metric } from "../catalog/metric";
 import { DataTable } from "../catalog/data-table";
+import { TerminologySelect } from "../catalog/terminology-select";
 
 export type ComponentConfig = {
   component: React.ComponentType<any>;
@@ -88,4 +89,5 @@ export const DEFAULT_CATALOG: Catalog = {
   DashboardCard: { component: DashboardCard },
   Metric: { component: Metric },
   DataTable: { component: DataTable },
+  TerminologySelect: { component: TerminologySelect },
 };
