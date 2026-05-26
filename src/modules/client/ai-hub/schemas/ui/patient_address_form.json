@@ -7,7 +7,7 @@
       "type": "Form",
       "properties": {
         "action": { "name": "add_patient_address" },
-        "submitLabel": { "literalString": "Add Address" },
+        "submitLabel": { "literalString": "Save Addresses" },
         "gap": "medium",
         "alignment": "stretch",
         "children": [
@@ -15,7 +15,7 @@
             "id": "form-title",
             "type": "Text",
             "properties": {
-              "text": { "literalString": "Add Patient Address" },
+              "text": { "literalString": "Add Patient Addresses" },
               "usageHint": "h2"
             }
           },
@@ -23,7 +23,7 @@
             "id": "form-subtitle",
             "type": "Text",
             "properties": {
-              "text": { "literalString": "Append a postal or physical address to the patient record." },
+              "text": { "literalString": "Append one or more postal or physical addresses. Specify the address use (home, work, billing) and type (postal, physical), and optionally constrain validity with a period." },
               "usageHint": "caption"
             }
           },
@@ -33,69 +33,161 @@
             "properties": {}
           },
           {
-            "id": "line",
-            "type": "TextField",
+            "id": "addresses",
+            "type": "RepeatableGroup",
             "properties": {
-              "label": { "literalString": "Street Address" },
-              "placeholder": { "literalString": "e.g. 123 Main Street, Apt 4B" },
-              "textFieldType": "shortText"
-            }
-          },
-          {
-            "id": "city-state-row",
-            "type": "Row",
-            "properties": {
-              "gap": "medium",
-              "alignment": "stretch",
-              "children": [
+              "addLabel": { "literalString": "Add Address" },
+              "minItems": { "literalNumber": 1 },
+              "defaultCount": { "literalNumber": 1 },
+              "template": [
                 {
-                  "id": "city",
-                  "type": "TextField",
-                  "weight": 2,
+                  "id": "use-type-row",
+                  "type": "Row",
                   "properties": {
-                    "label": { "literalString": "City" },
-                    "placeholder": { "literalString": "City" },
+                    "gap": "medium",
+                    "alignment": "stretch",
+                    "children": [
+                      {
+                        "id": "use",
+                        "type": "TerminologySelect",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Address Use" },
+                          "placeholder": { "literalString": "Search use…" },
+                          "items": "$address_use_concepts.concepts",
+                          "valueType": { "literalString": "code" }
+                        }
+                      },
+                      {
+                        "id": "type",
+                        "type": "TerminologySelect",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Address Type" },
+                          "placeholder": { "literalString": "Search type…" },
+                          "items": "$address_type_concepts.concepts",
+                          "valueType": { "literalString": "code" }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "line",
+                  "type": "TextField",
+                  "properties": {
+                    "label": { "literalString": "Street Address" },
+                    "placeholder": { "literalString": "e.g. 123 Main Street, Apt 4B" },
                     "textFieldType": "shortText"
                   }
                 },
                 {
-                  "id": "state",
-                  "type": "TextField",
-                  "weight": 1,
+                  "id": "city-state-row",
+                  "type": "Row",
                   "properties": {
-                    "label": { "literalString": "State / Province" },
-                    "placeholder": { "literalString": "State" },
-                    "textFieldType": "shortText"
+                    "gap": "medium",
+                    "alignment": "stretch",
+                    "children": [
+                      {
+                        "id": "city",
+                        "type": "TextField",
+                        "weight": 2,
+                        "properties": {
+                          "label": { "literalString": "City" },
+                          "placeholder": { "literalString": "City" },
+                          "textFieldType": "shortText"
+                        }
+                      },
+                      {
+                        "id": "state",
+                        "type": "TextField",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "State / Province" },
+                          "placeholder": { "literalString": "State" },
+                          "textFieldType": "shortText"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-          },
-          {
-            "id": "postal-country-row",
-            "type": "Row",
-            "properties": {
-              "gap": "medium",
-              "alignment": "stretch",
-              "children": [
+                },
                 {
-                  "id": "postal_code",
-                  "type": "TextField",
-                  "weight": 1,
+                  "id": "district-postal-country-row",
+                  "type": "Row",
                   "properties": {
-                    "label": { "literalString": "Postal Code" },
-                    "placeholder": { "literalString": "ZIP / Postal code" },
+                    "gap": "medium",
+                    "alignment": "stretch",
+                    "children": [
+                      {
+                        "id": "district",
+                        "type": "TextField",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "District / County (optional)" },
+                          "placeholder": { "literalString": "District" },
+                          "textFieldType": "shortText"
+                        }
+                      },
+                      {
+                        "id": "postal_code",
+                        "type": "TextField",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Postal Code" },
+                          "placeholder": { "literalString": "ZIP / Postal code" },
+                          "textFieldType": "shortText"
+                        }
+                      },
+                      {
+                        "id": "country",
+                        "type": "TextField",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Country" },
+                          "placeholder": { "literalString": "Country" },
+                          "textFieldType": "shortText"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "text",
+                  "type": "TextField",
+                  "properties": {
+                    "label": { "literalString": "Full Address Text (optional)" },
+                    "placeholder": { "literalString": "Free-text representation of the full address" },
                     "textFieldType": "shortText"
                   }
                 },
                 {
-                  "id": "country",
-                  "type": "TextField",
-                  "weight": 1,
+                  "id": "period-row",
+                  "type": "Row",
                   "properties": {
-                    "label": { "literalString": "Country" },
-                    "placeholder": { "literalString": "Country" },
-                    "textFieldType": "shortText"
+                    "gap": "medium",
+                    "alignment": "stretch",
+                    "children": [
+                      {
+                        "id": "period_start",
+                        "type": "DateTimeInput",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Valid From (optional)" },
+                          "enableDate": true,
+                          "enableTime": false
+                        }
+                      },
+                      {
+                        "id": "period_end",
+                        "type": "DateTimeInput",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Valid To (optional)" },
+                          "enableDate": true,
+                          "enableTime": false
+                        }
+                      }
+                    ]
                   }
                 }
               ]

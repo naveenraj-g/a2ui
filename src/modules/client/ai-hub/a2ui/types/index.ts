@@ -512,6 +512,22 @@ export interface TerminologySelectNode extends BaseComponentNode {
   properties: TerminologySelectType;
 }
 
+export interface RepeatableGroupType {
+  label?: StringValue;
+  addLabel?: StringValue;
+  removeLabel?: StringValue;
+  minItems?: NumberValue;
+  maxItems?: NumberValue;
+  defaultCount?: NumberValue;
+  allowDuplicate?: BooleanValue;
+  template: AnyComponentNode[];
+}
+
+export interface RepeatableGroupNode extends BaseComponentNode {
+  type: "RepeatableGroup";
+  properties: RepeatableGroupType;
+}
+
 export interface SliderNode extends BaseComponentNode {
   type: "Slider";
   properties: Slider;
@@ -698,6 +714,7 @@ export type AnyComponentNode =
   | MarkdownNode
   | TextNode
   | TerminologySelectNode
+  | RepeatableGroupNode
   | IconNode
   | ImageNode
   | VideoNode

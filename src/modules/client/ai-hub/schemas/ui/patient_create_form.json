@@ -41,36 +41,6 @@
             }
           },
           {
-            "id": "name-row",
-            "type": "Row",
-            "properties": {
-              "gap": "medium",
-              "alignment": "stretch",
-              "children": [
-                {
-                  "id": "given_name",
-                  "type": "TextField",
-                  "weight": 1,
-                  "properties": {
-                    "label": { "literalString": "Given Name" },
-                    "placeholder": { "literalString": "First name" },
-                    "textFieldType": "shortText"
-                  }
-                },
-                {
-                  "id": "family_name",
-                  "type": "TextField",
-                  "weight": 1,
-                  "properties": {
-                    "label": { "literalString": "Family Name" },
-                    "placeholder": { "literalString": "Last name" },
-                    "textFieldType": "shortText"
-                  }
-                }
-              ]
-            }
-          },
-          {
             "id": "gender-marital-row",
             "type": "Row",
             "properties": {

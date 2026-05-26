@@ -1,0 +1,11 @@
+services:
+  previsit-agent:
+    image: kipla1412/a2uiagent:latest
+    container_name: a2ui-agents
+    ports:
+      - "8022:8000"
+    environment:
+      API_KEY: "${OPENAI_API_KEY}"
+      IAM_JWKS_URL: "http://host.docker.internal:5000/api/auth/jwks"
+      IAM_ISSUER: "http://localhost:5000"
+    # restart: unless-stopped

@@ -73,6 +73,12 @@ export function Form({
           formData[id] = el.checked;
         } else if (el.type === "number" || el.type === "range") {
           formData[id] = el.valueAsNumber;
+        } else if (el.type === "hidden" && el.dataset.json === "true") {
+          try {
+            formData[id] = JSON.parse(el.value);
+          } catch {
+            formData[id] = el.value;
+          }
         } else {
           formData[id] = el.value;
         }

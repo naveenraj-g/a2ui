@@ -1,8 +1,8 @@
 {
   "id": "create_patient",
   "name": "Create Patient",
-  "description": "Create a new Patient resource and optionally append identifiers, telecom contact points, and addresses as part of patient onboarding.",
-  "version": "1.0.0",
+  "description": "Create a new Patient resource and optionally append names, identifiers, telecom contact points, addresses, communication languages, emergency contacts, general practitioners, photos, and patient links as part of patient onboarding.",
+  "version": "2.0.0",
   "tags": ["fhir", "patient", "create", "crud", "healthcare", "onboarding"],
   "llm_hints": {
     "intent_examples": [
@@ -33,7 +33,7 @@
     "orchestrator": "nextjs",
     "audit_enabled": true
   },
-  "introduction": "I'll help you register a new patient. This is a 4-step process — the first step creates the core patient record, and the remaining 3 (identifier, contact point, and address) are optional and can be skipped.",
+  "introduction": "I'll help you register a new patient. This is a 10-step process — the first step creates the core patient record, and the remaining 9 (names, identifiers, contact points, addresses, languages, emergency contacts, general practitioners, photos, and patient links) are optional and can be skipped.",
   "completion": {
     "message": "Patient registration complete. The patient record has been created and configured with the provided details.",
     "action": "dismiss"
@@ -44,7 +44,7 @@
       "id": "create_patient_resource",
       "name": "Create Patient Resource",
       "step_type": "form",
-      "description": "Create the base Patient resource using demographic details including name, birth date, gender, and active status.",
+      "description": "Create the base Patient resource using demographic details including birth date, gender, and active status.",
       "context": {
         "inputs": {},
         "outputs": {
@@ -94,11 +94,69 @@
     },
     {
       "sequence_number": 2,
-      "id": "add_patient_identifier",
-      "name": "Add Patient Identifier",
+      "id": "add_patient_names",
+      "name": "Add Patient Names",
       "step_type": "form",
       "optional": true,
-      "description": "Append business identifiers such as MRN, insurance ID, passport number, or national identifier to the Patient resource.",
+      "description": "Add one or more names for the patient — official, nickname, maiden name, and so on.",
+      "context": {
+        "inputs": {
+          "patient_id": {
+            "type": "integer",
+            "resource": "Patient",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "patient_name_resource": {
+            "type": "HumanName"
+          }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Patient still exists before appending names.",
+          "tool_name": "get_patient_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch name-use value set for the Name Use terminology select.",
+          "context_key": "name_use_concepts",
+          "tool_name": "get_name_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=name.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": {
+        "schema": "patient_name_form",
+        "mode": "append",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "add_patient_name",
+          "tool_name": "add_patient_name",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/names",
+          "method": "POST",
+          "iterate_key": "names",
+          "validation_schema": "name_create_schema",
+          "retryable": true,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 3,
+      "id": "add_patient_identifier",
+      "name": "Add Patient Identifiers",
+      "step_type": "form",
+      "optional": true,
+      "description": "Append one or more business identifiers such as MRN, insurance ID, passport number, or national identifier to the Patient resource.",
       "context": {
         "inputs": {
           "patient_id": {
@@ -113,13 +171,31 @@
           }
         }
       },
-      "context_resolver": {
-        "description": "Confirm the Patient still exists in the database before appending identifiers — guards against partial completion if the user previously exited mid-workflow.",
-        "tool_name": "get_patient_by_id",
-        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
-        "method": "GET",
-        "timeout_ms": 10000
-      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Patient still exists before appending identifiers.",
+          "tool_name": "get_patient_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch identifier-use value set for the Identifier Use terminology select.",
+          "context_key": "identifier_use_concepts",
+          "tool_name": "get_identifier_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=identifier.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch identifier-type value set for the Identifier Type terminology select.",
+          "context_key": "identifier_type_concepts",
+          "tool_name": "get_identifier_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=identifier.type",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
       "ui": {
         "schema": "patient_identifier_form",
         "mode": "append",
@@ -133,6 +209,7 @@
           "tool_name": "add_patient_identifier",
           "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/identifiers",
           "method": "POST",
+          "iterate_key": "identifiers",
           "validation_schema": "identifier_create_schema",
           "retryable": true,
           "timeout_ms": 10000
@@ -140,12 +217,12 @@
       ]
     },
     {
-      "sequence_number": 3,
+      "sequence_number": 4,
       "id": "add_patient_telecom",
       "name": "Add Patient Telecom",
       "step_type": "form",
       "optional": true,
-      "description": "Append telecom communication details such as mobile number, phone number, email address, or fax.",
+      "description": "Append one or more telecom contact points such as mobile number, phone number, email address, or fax.",
       "context": {
         "inputs": {
           "patient_id": {
@@ -160,13 +237,31 @@
           }
         }
       },
-      "context_resolver": {
-        "description": "Confirm the Patient still exists in the database before appending telecom — guards against partial completion if the user previously exited mid-workflow.",
-        "tool_name": "get_patient_by_id",
-        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
-        "method": "GET",
-        "timeout_ms": 10000
-      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Patient still exists before appending telecom.",
+          "tool_name": "get_patient_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch telecom-system value set for the Contact Type terminology select.",
+          "context_key": "telecom_system_concepts",
+          "tool_name": "get_telecom_system_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=telecom.system",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch telecom-use value set for the Use terminology select.",
+          "context_key": "telecom_use_concepts",
+          "tool_name": "get_telecom_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=telecom.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
       "ui": {
         "schema": "patient_telecom_form",
         "mode": "append",
@@ -180,6 +275,7 @@
           "tool_name": "add_patient_telecom",
           "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/telecom",
           "method": "POST",
+          "iterate_key": "telecom",
           "validation_schema": "telecom_create_schema",
           "retryable": true,
           "timeout_ms": 10000
@@ -187,12 +283,12 @@
       ]
     },
     {
-      "sequence_number": 4,
+      "sequence_number": 5,
       "id": "add_patient_address",
-      "name": "Add Patient Address",
+      "name": "Add Patient Addresses",
       "step_type": "form",
       "optional": true,
-      "description": "Append postal or physical address information to the Patient resource.",
+      "description": "Append one or more postal or physical address records to the Patient resource.",
       "context": {
         "inputs": {
           "patient_id": {
@@ -207,13 +303,31 @@
           }
         }
       },
-      "context_resolver": {
-        "description": "Confirm the Patient still exists in the database before appending an address — guards against partial completion if the user previously exited mid-workflow.",
-        "tool_name": "get_patient_by_id",
-        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
-        "method": "GET",
-        "timeout_ms": 10000
-      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Patient still exists before appending an address.",
+          "tool_name": "get_patient_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch address-use value set for the Address Use terminology select.",
+          "context_key": "address_use_concepts",
+          "tool_name": "get_address_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=address.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch address-type value set for the Address Type terminology select.",
+          "context_key": "address_type_concepts",
+          "tool_name": "get_address_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=address.type",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
       "ui": {
         "schema": "patient_address_form",
         "mode": "append",
@@ -227,7 +341,257 @@
           "tool_name": "add_patient_address",
           "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/addresses",
           "method": "POST",
+          "iterate_key": "addresses",
           "validation_schema": "address_create_schema",
+          "retryable": true,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 6,
+      "id": "add_patient_communication",
+      "name": "Add Communication Languages",
+      "step_type": "form",
+      "optional": true,
+      "description": "Record one or more languages the patient can use to communicate with their care team.",
+      "context": {
+        "inputs": {
+          "patient_id": {
+            "type": "integer",
+            "resource": "Patient",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "patient_communication_resource": {
+            "type": "Communication"
+          }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Patient still exists before appending communication languages.",
+          "tool_name": "get_patient_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch communication-language value set for the Language terminology select.",
+          "context_key": "communication_language_concepts",
+          "tool_name": "get_communication_language_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=communication.language",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": {
+        "schema": "patient_communication_form",
+        "mode": "append",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "add_patient_communication",
+          "tool_name": "add_patient_communication",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/communications",
+          "method": "POST",
+          "iterate_key": "communications",
+          "validation_schema": "communication_create_schema",
+          "retryable": true,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 7,
+      "id": "add_patient_contact",
+      "name": "Add Emergency Contact",
+      "step_type": "form",
+      "optional": true,
+      "description": "Add a next-of-kin, guardian, or emergency contact (name, address, and gender) to the Patient resource.",
+      "context": {
+        "inputs": {
+          "patient_id": {
+            "type": "integer",
+            "resource": "Patient",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "patient_contact_resource": {
+            "type": "Contact"
+          }
+        }
+      },
+      "context_resolver": {
+        "description": "Confirm the Patient still exists before appending a contact.",
+        "tool_name": "get_patient_by_id",
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "ui": {
+        "schema": "patient_contact_form",
+        "mode": "append",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "add_patient_contact",
+          "tool_name": "add_patient_contact",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/contacts",
+          "method": "POST",
+          "validation_schema": "contact_create_schema",
+          "retryable": true,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 8,
+      "id": "add_patient_general_practitioner",
+      "name": "Add General Practitioners",
+      "step_type": "form",
+      "optional": true,
+      "description": "Link one or more primary care providers — organisations, practitioners, or practitioner roles — to this patient.",
+      "context": {
+        "inputs": {
+          "patient_id": {
+            "type": "integer",
+            "resource": "Patient",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "patient_gp_resource": {
+            "type": "GeneralPractitioner"
+          }
+        }
+      },
+      "context_resolver": {
+        "description": "Confirm the Patient still exists before appending general practitioners.",
+        "tool_name": "get_patient_by_id",
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "ui": {
+        "schema": "patient_gp_form",
+        "mode": "append",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "add_patient_general_practitioner",
+          "tool_name": "add_patient_general_practitioner",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/general-practitioners",
+          "method": "POST",
+          "iterate_key": "general_practitioners",
+          "validation_schema": "gp_create_schema",
+          "retryable": true,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 9,
+      "id": "add_patient_photo",
+      "name": "Add Patient Photos",
+      "step_type": "form",
+      "optional": true,
+      "description": "Attach one or more photo URLs to the patient record.",
+      "context": {
+        "inputs": {
+          "patient_id": {
+            "type": "integer",
+            "resource": "Patient",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "patient_photo_resource": {
+            "type": "Attachment"
+          }
+        }
+      },
+      "context_resolver": {
+        "description": "Confirm the Patient still exists before appending photos.",
+        "tool_name": "get_patient_by_id",
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "ui": {
+        "schema": "patient_photo_form",
+        "mode": "append",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "add_patient_photo",
+          "tool_name": "add_patient_photo",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/photos",
+          "method": "POST",
+          "iterate_key": "photos",
+          "validation_schema": "photo_create_schema",
+          "retryable": true,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 10,
+      "id": "add_patient_link",
+      "name": "Add Patient Links",
+      "step_type": "form",
+      "optional": true,
+      "description": "Link this patient to another Patient or RelatedPerson record — for example to represent merged records or family relationships.",
+      "context": {
+        "inputs": {
+          "patient_id": {
+            "type": "integer",
+            "resource": "Patient",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "patient_link_resource": {
+            "type": "Link"
+          }
+        }
+      },
+      "context_resolver": {
+        "description": "Confirm the Patient still exists before appending links.",
+        "tool_name": "get_patient_by_id",
+        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "ui": {
+        "schema": "patient_link_form",
+        "mode": "append",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "add_patient_link",
+          "tool_name": "add_patient_link",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id/links",
+          "method": "POST",
+          "iterate_key": "links",
+          "validation_schema": "link_create_schema",
           "retryable": true,
           "timeout_ms": 10000
         }

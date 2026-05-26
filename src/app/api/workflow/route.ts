@@ -59,29 +59,29 @@ export async function POST(req: Request) {
 
     // Ask the external agent which workflow matches the user's intent.
     // The agent returns a complete WorkflowDefinition JSON.
-    const agentRes = await fetch(AGENT_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        query: message,
-        session_id:
-          (sessionContext.session_id as string | undefined) ??
-          crypto.randomUUID(),
-      }),
-      cache: "no-store",
-    });
+    // const agentRes = await fetch(AGENT_API_URL, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    //   body: JSON.stringify({
+    //     query: message,
+    //     session_id:
+    //       (sessionContext.session_id as string | undefined) ??
+    //       crypto.randomUUID(),
+    //   }),
+    //   cache: "no-store",
+    // });
 
-    if (!agentRes.ok) {
-      throw new Error(`Agent API error: ${agentRes.status}`);
-    }
+    // if (!agentRes.ok) {
+    //   throw new Error(`Agent API error: ${agentRes.status}`);
+    // }
 
-    const workflow: WorkflowDefinition = await agentRes.json();
+    // const workflow: WorkflowDefinition = await agentRes.json();
 
     // ** Testing **
-    // const workflow: WorkflowDefinition = create_patient_workflow;
+    const workflow: WorkflowDefinition = create_patient_workflow;
 
     // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);

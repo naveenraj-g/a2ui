@@ -77,6 +77,7 @@ export interface WorkflowAction {
   url: string;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   validation_schema?: string;
+  iterate_key?: string;
   retryable: boolean;
   timeout_ms?: number;
 }

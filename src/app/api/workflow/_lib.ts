@@ -76,7 +76,12 @@ export function extractOutputs(
 export function cleanFormData(data: Record<string, unknown>): Record<string, unknown> {
   const cleaned: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    if (value !== "" && value !== undefined && value !== null) {
+    if (
+      value !== "" &&
+      value !== undefined &&
+      value !== null &&
+      !(typeof value === "number" && isNaN(value))
+    ) {
       cleaned[key] = value;
     }
   }

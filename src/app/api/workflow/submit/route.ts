@@ -96,7 +96,8 @@ export async function POST(req: Request) {
     const cleaned = cleanFormData(rawFields);
 
     // Validate the cleaned payload against the action's declared schema (if any).
-    if (action.validation_schema) {
+    // Skip for iterate_key steps — validation happens per-item inside the loop below.
+    if (action.validation_schema && !action.iterate_key) {
       const schema = VALIDATION_SCHEMAS[action.validation_schema];
       if (schema) {
         const result = schema.safeParse(cleaned);
@@ -113,6 +114,50 @@ export async function POST(req: Request) {
     // Interpolate path params: e.g. ".../patients/$patient_id/identifiers"
     // uses patient_id from sessionContext (set after step 1 completed).
     const url = resolveUrl(action.url, { ...sessionContext, ...cleaned });
+
+    // RepeatableGroup steps set iterate_key; loop over the array and POST each item individually.
+    if (action.iterate_key) {
+      const items = Array.isArray(cleaned[action.iterate_key])
+        ? (cleaned[action.iterate_key] as Record<string, unknown>[])
+        : [];
+
+      let lastData: Record<string, unknown> = {};
+      for (const raw of items) {
+        const item = cleanFormData(raw as Record<string, unknown>);
+        if (Object.keys(item).length === 0) continue;
+
+        let payload: Record<string, unknown> = item;
+        if (action.validation_schema) {
+          const schema = VALIDATION_SCHEMAS[action.validation_schema];
+          if (schema) {
+            const result = schema.safeParse(item);
+            if (!result.success) {
+              const message = result.error.issues.map((i) => i.message).join("; ");
+              return Response.json({ success: false, error: message }, { status: 422 });
+            }
+            payload = result.data as Record<string, unknown>;
+          }
+        }
+
+        const itemRes = await fetch(url, {
+          method: action.method,
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload),
+          cache: "no-store",
+          signal: action.timeout_ms ? AbortSignal.timeout(action.timeout_ms) : undefined,
+        });
+        if (!itemRes.ok) {
+          const errText = await itemRes.text();
+          return Response.json({ success: false, error: errText || `HTTP ${itemRes.status}` });
+        }
+        lastData = await itemRes.json();
+      }
+
+      const outputs = step.context ? extractOutputs(step.context.outputs, lastData) : {};
+      const updatedContext = { ...sessionContext, ...outputs };
+      const nextStepIndex = stepIndex + 1 < steps.length ? stepIndex + 1 : null;
+      return Response.json({ success: true, data: lastData, nextStepIndex, sessionContext: updatedContext });
+    }
 
     const res = await fetch(url, {
       method: action.method,

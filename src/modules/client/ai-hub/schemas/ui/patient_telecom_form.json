@@ -7,7 +7,7 @@
       "type": "Form",
       "properties": {
         "action": { "name": "add_patient_telecom" },
-        "submitLabel": { "literalString": "Add Contact" },
+        "submitLabel": { "literalString": "Save Contact Points" },
         "gap": "medium",
         "alignment": "stretch",
         "children": [
@@ -15,7 +15,7 @@
             "id": "form-title",
             "type": "Text",
             "properties": {
-              "text": { "literalString": "Add Contact Point" },
+              "text": { "literalString": "Add Telecom Contact Points" },
               "usageHint": "h2"
             }
           },
@@ -23,7 +23,7 @@
             "id": "form-subtitle",
             "type": "Text",
             "properties": {
-              "text": { "literalString": "Append a phone number, email address, or other contact point to the patient record." },
+              "text": { "literalString": "Record phone numbers, email addresses, fax, and other contact details. Set a priority rank (1 = highest preference) and optionally define a validity period." },
               "usageHint": "caption"
             }
           },
@@ -33,43 +33,81 @@
             "properties": {}
           },
           {
-            "id": "system",
-            "type": "MultipleChoice",
+            "id": "telecom",
+            "type": "RepeatableGroup",
             "properties": {
-              "label": { "literalString": "Contact Type" },
-              "placeholder": { "literalString": "Select contact type" },
-              "items": [
-                { "label": { "literalString": "Phone" }, "value": "phone" },
-                { "label": { "literalString": "Email" }, "value": "email" },
-                { "label": { "literalString": "SMS" }, "value": "sms" },
-                { "label": { "literalString": "Fax" }, "value": "fax" },
-                { "label": { "literalString": "URL" }, "value": "url" },
-                { "label": { "literalString": "Pager" }, "value": "pager" },
-                { "label": { "literalString": "Other" }, "value": "other" }
-              ]
-            }
-          },
-          {
-            "id": "value",
-            "type": "TextField",
-            "properties": {
-              "label": { "literalString": "Contact Value" },
-              "placeholder": { "literalString": "e.g. +1-555-123-4567 or user@example.com" },
-              "textFieldType": "shortText"
-            }
-          },
-          {
-            "id": "use",
-            "type": "MultipleChoice",
-            "properties": {
-              "label": { "literalString": "Use" },
-              "placeholder": { "literalString": "Select purpose (optional)" },
-              "items": [
-                { "label": { "literalString": "Home" }, "value": "home" },
-                { "label": { "literalString": "Work" }, "value": "work" },
-                { "label": { "literalString": "Mobile" }, "value": "mobile" },
-                { "label": { "literalString": "Temp" }, "value": "temp" },
-                { "label": { "literalString": "Old" }, "value": "old" }
+              "addLabel": { "literalString": "Add Contact Point" },
+              "minItems": { "literalNumber": 1 },
+              "defaultCount": { "literalNumber": 1 },
+              "template": [
+                {
+                  "id": "system",
+                  "type": "TerminologySelect",
+                  "properties": {
+                    "label": { "literalString": "Contact Type" },
+                    "placeholder": { "literalString": "Search contact type…" },
+                    "items": "$telecom_system_concepts.concepts",
+                    "valueType": { "literalString": "code" }
+                  }
+                },
+                {
+                  "id": "value",
+                  "type": "TextField",
+                  "properties": {
+                    "label": { "literalString": "Contact Value" },
+                    "placeholder": { "literalString": "e.g. +1-555-123-4567 or user@example.com" },
+                    "textFieldType": "shortText"
+                  }
+                },
+                {
+                  "id": "use",
+                  "type": "TerminologySelect",
+                  "properties": {
+                    "label": { "literalString": "Use (optional)" },
+                    "placeholder": { "literalString": "Search use…" },
+                    "items": "$telecom_use_concepts.concepts",
+                    "valueType": { "literalString": "code" }
+                  }
+                },
+                {
+                  "id": "rank",
+                  "type": "TextField",
+                  "properties": {
+                    "label": { "literalString": "Priority Rank (optional)" },
+                    "placeholder": { "literalString": "e.g. 1 = highest preference" },
+                    "textFieldType": "number"
+                  }
+                },
+                {
+                  "id": "period-row",
+                  "type": "Row",
+                  "properties": {
+                    "gap": "medium",
+                    "alignment": "stretch",
+                    "children": [
+                      {
+                        "id": "period_start",
+                        "type": "DateTimeInput",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Valid From (optional)" },
+                          "enableDate": true,
+                          "enableTime": false
+                        }
+                      },
+                      {
+                        "id": "period_end",
+                        "type": "DateTimeInput",
+                        "weight": 1,
+                        "properties": {
+                          "label": { "literalString": "Valid To (optional)" },
+                          "enableDate": true,
+                          "enableTime": false
+                        }
+                      }
+                    ]
+                  }
+                }
               ]
             }
           }

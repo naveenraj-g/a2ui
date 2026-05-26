@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const patientCreateSchema = z.object({
-  given_name: z.string().max(100).optional(),
-  family_name: z.string().max(100).optional(),
   gender: z.enum(["male", "female", "other", "unknown"]).optional(),
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD").optional(),
   active: z.boolean().optional(),
