@@ -3,7 +3,19 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"D:\\\\work\\\\code\\\\drgodly\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "Bash(node -e ' *)",
+      "Bash(New-Item -ItemType Directory -Force \"E:\\\\work\\\\code\\\\a2ui\\\\src\\\\app\\\\api\\\\workflow\\\\terminology\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"done\")",
+      "PowerShell(New-Item *)",
+      "Bash(npx tsc *)",
+      "Bash(git stash *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(Get-ChildItem -Path \"E:\\\\work\\\\code\\\\a2ui\" -Force)",
+      "Bash(Select-Object Name, FullName)"
     ]
   }
 }

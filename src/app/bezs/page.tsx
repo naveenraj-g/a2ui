@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function BezsPage() {
   const session = await getServerSession();
+  console.log(session);
 
   if (!session) {
     redirect("/login");

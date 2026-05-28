@@ -1,0 +1,101 @@
+{
+  "id": "book_appointment",
+  "name": "Book Appointment",
+  "description": "Book a scheduled healthcare appointment for a patient with a practitioner from the organisation's directory.",
+  "version": "1.0.0",
+  "tags": ["fhir", "appointment", "booking", "scheduling", "healthcare"],
+  "llm_hints": {
+    "intent_examples": [
+      "Book an appointment",
+      "Schedule an appointment",
+      "Make an appointment for a patient",
+      "Book a consultation",
+      "Schedule a follow-up",
+      "Book a patient with a doctor"
+    ],
+    "when_to_use": [
+      "User wants to book or schedule a new appointment",
+      "User wants to create an appointment for a patient",
+      "User provides a patient and wants to schedule a visit with a practitioner"
+    ],
+    "when_not_to_use": [
+      "User wants to view or list existing appointments",
+      "User wants to cancel or update an appointment",
+      "User wants to create a patient record (use create_patient instead)"
+    ],
+    "required_context": []
+  },
+  "execution": {
+    "mode": "deterministic",
+    "orchestrator": "nextjs",
+    "audit_enabled": true
+  },
+  "introduction": "I'll help you book an appointment. Select a practitioner from your organisation's directory, choose a date and time, and confirm the booking.",
+  "completion": {
+    "message": "Appointment booked successfully. The patient and practitioner have been notified.",
+    "action": "dismiss"
+  },
+  "workflow_steps": [
+    {
+      "sequence_number": 1,
+      "id": "book_appointment_step",
+      "name": "Book Appointment",
+      "step_type": "form",
+      "description": "Select a practitioner, set the appointment date and time, choose a status, and optionally add an appointment type and description.",
+      "context": {
+        "inputs": {},
+        "outputs": {
+          "appointment_id": {
+            "type": "integer",
+            "resource": "Appointment",
+            "field": "id"
+          }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Fetch active practitioners available for booking in this organisation.",
+          "context_key": "booking_practitioners",
+          "tool_name": "list_practitioners_for_booking",
+          "url": "$fhir_server_url/api/fhir/v1/practitioner-roles/booking",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch appointment status value set for the Status terminology select.",
+          "context_key": "appointment_status_concepts",
+          "tool_name": "get_appointment_status_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Appointment&field=status",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch appointment-type value set for the Appointment Type terminology select.",
+          "context_key": "appointment_type_concepts",
+          "tool_name": "get_appointment_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Appointment&field=appointmentType",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": {
+        "schema": "appointment_create_form",
+        "mode": "create",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "create_appointment",
+          "tool_name": "create_appointment",
+          "url": "$fhir_server_url/api/fhir/v1/appointments/",
+          "method": "POST",
+          "validation_schema": "appointment_create_schema",
+          "retryable": false,
+          "timeout_ms": 10000
+        }
+      ]
+    }
+  ]
+}

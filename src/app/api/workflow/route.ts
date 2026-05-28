@@ -36,6 +36,7 @@ import {
 import create_patient_workflow from "@/modules/client/ai-hub/workflows/patient/create_patient.json";
 import view_vitals_dashboard from "@/modules/client/ai-hub/workflows/vitals/view_vitals_dashboard.json";
 import view_vitals_table from "@/modules/client/ai-hub/workflows/vitals/view_vitals_table.json";
+import book_appointment from "@/modules/client/ai-hub/workflows/appointment/book_appointment.json";
 
 const AGENT_API_URL = process.env.AGENT_API_URL!;
 
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
     // const workflow: WorkflowDefinition = await agentRes.json();
 
     // ** Testing **
-    const workflow: WorkflowDefinition = create_patient_workflow;
+    const workflow: WorkflowDefinition = book_appointment;
 
     // Guarantee deterministic ordering regardless of how the agent serialises steps.
     const steps = sortedSteps(workflow.workflow_steps);

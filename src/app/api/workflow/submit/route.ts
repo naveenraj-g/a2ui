@@ -95,8 +95,10 @@ export async function POST(req: Request) {
 
     const cleaned = cleanFormData(rawFields);
 
-    // Validate the cleaned payload against the action's declared schema (if any).
-    // Skip for iterate_key steps — validation happens per-item inside the loop below.
+    // Validate + transform the cleaned payload against the action's declared schema (if any).
+    // Skip for iterate_key steps — validation and transform happen per-item inside the loop below.
+    // Use result.data (not cleaned) so Zod transforms (e.g. building participant arrays) take effect.
+    let payload: Record<string, unknown> = cleaned;
     if (action.validation_schema && !action.iterate_key) {
       const schema = VALIDATION_SCHEMAS[action.validation_schema];
       if (schema) {
@@ -108,6 +110,7 @@ export async function POST(req: Request) {
             { status: 422 },
           );
         }
+        payload = result.data as Record<string, unknown>;
       }
     }
 
@@ -166,7 +169,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${token}`,
       },
       // GET requests must not carry a body per HTTP spec.
-      body: action.method !== "GET" ? JSON.stringify(cleaned) : undefined,
+      body: action.method !== "GET" ? JSON.stringify(payload) : undefined,
       cache: "no-store",
       signal: action.timeout_ms
         ? AbortSignal.timeout(action.timeout_ms)

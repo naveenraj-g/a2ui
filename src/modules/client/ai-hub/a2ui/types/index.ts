@@ -528,6 +528,29 @@ export interface RepeatableGroupNode extends BaseComponentNode {
   properties: RepeatableGroupType;
 }
 
+export interface DataSelectEmit {
+  key: string;
+  path: string;
+}
+
+export interface DataSelectType {
+  label?: StringValue;
+  placeholder?: StringValue;
+  /** Resolved array from context via $variable — any object shape. */
+  items?: any;
+  /** Dot-path into each item for the primary display label (e.g. "practitioner_detail.name.text"). */
+  labelPath?: string;
+  /** Dot-path for an optional secondary description line (e.g. "specialty.0.coding_display"). */
+  descriptionPath?: string;
+  /** On selection, writes hidden inputs {id}_{key} = item[path] for each entry. */
+  emits?: DataSelectEmit[];
+}
+
+export interface DataSelectNode extends BaseComponentNode {
+  type: "DataSelect";
+  properties: DataSelectType;
+}
+
 export interface SliderNode extends BaseComponentNode {
   type: "Slider";
   properties: Slider;
@@ -715,6 +738,7 @@ export type AnyComponentNode =
   | TextNode
   | TerminologySelectNode
   | RepeatableGroupNode
+  | DataSelectNode
   | IconNode
   | ImageNode
   | VideoNode

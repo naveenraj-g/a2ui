@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { appointmentCreateSchema } from "./appointment/appointment_create_schema";
 import { patientCreateSchema } from "./patient/patient_create_schema";
 import { identifierCreateSchema } from "./patient/identifier_create_schema";
 import { telecomCreateSchema } from "./patient/telecom_create_schema";
@@ -12,6 +13,7 @@ import { linkCreateSchema } from "./patient/link_create_schema";
 
 /** Maps the workflow action's validation_schema key to the corresponding Zod schema. */
 export const VALIDATION_SCHEMAS: Record<string, z.ZodTypeAny> = {
+  appointment_create_schema: appointmentCreateSchema,
   patient_create_schema: patientCreateSchema,
   identifier_create_schema: identifierCreateSchema,
   telecom_create_schema: telecomCreateSchema,
