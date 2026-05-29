@@ -1,0 +1,183 @@
+{
+  "id": "create_organization",
+  "name": "Create Organization",
+  "description": "Create a new Organisation resource and add a Location in two steps: first provide core organisation details, then define the physical location linked to the new organisation.",
+  "version": "1.0.0",
+  "tags": ["fhir", "organization", "location", "create", "crud", "healthcare"],
+  "llm_hints": {
+    "intent_examples": [
+      "Create an organisation",
+      "Register a new hospital",
+      "Add a new clinic",
+      "Create a healthcare organisation",
+      "Set up a new organisation with a location",
+      "Register a new healthcare provider organisation"
+    ],
+    "when_to_use": [
+      "User wants to create a new Organisation resource",
+      "User wants to register a hospital, clinic, or healthcare provider",
+      "User wants to set up an organisation and its physical location"
+    ],
+    "when_not_to_use": [
+      "User wants to update an existing organisation",
+      "User wants to list or search organisations",
+      "User wants to create a patient or practitioner (use the relevant workflow)"
+    ],
+    "required_context": []
+  },
+  "execution": {
+    "mode": "deterministic",
+    "orchestrator": "nextjs",
+    "audit_enabled": true
+  },
+  "introduction": "I'll help you register a new organisation in 2 steps — first the core organisation details, then its physical location.",
+  "completion": {
+    "message": "Organisation and location created successfully.",
+    "action": "dismiss"
+  },
+  "workflow_steps": [
+    {
+      "sequence_number": 1,
+      "id": "create_organization_resource",
+      "name": "Create Organisation",
+      "step_type": "form",
+      "description": "Enter the organisation's name, type, contact details, and address.",
+      "context": {
+        "inputs": {},
+        "outputs": {
+          "organization_id": {
+            "type": "integer",
+            "resource": "Organization",
+            "field": "id"
+          }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Fetch organisation-type value set for the Type select.",
+          "context_key": "org_type_concepts",
+          "tool_name": "get_org_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Organization&field=type",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch telecom-system value set for the Contact Type select.",
+          "context_key": "telecom_system_concepts",
+          "tool_name": "get_telecom_system_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=telecom.system",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch telecom-use value set for the Contact Use select.",
+          "context_key": "telecom_use_concepts",
+          "tool_name": "get_telecom_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=telecom.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": {
+        "schema": "org_create_form",
+        "mode": "create",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "create_organization",
+          "tool_name": "create_organization",
+          "url": "$fhir_server_url/api/fhir/v1/organizations/",
+          "method": "POST",
+          "validation_schema": "organization_create_schema",
+          "retryable": false,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 2,
+      "id": "create_org_location",
+      "name": "Create Location",
+      "step_type": "form",
+      "description": "Define the physical location for this organisation.",
+      "context": {
+        "inputs": {
+          "organization_id": {
+            "type": "integer",
+            "resource": "Organization",
+            "source": "workflow"
+          }
+        },
+        "outputs": {
+          "location_id": {
+            "type": "integer",
+            "resource": "Location",
+            "field": "id"
+          }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Organisation still exists before creating its Location.",
+          "tool_name": "get_organization_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/organizations/$organization_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch location-status value set.",
+          "context_key": "location_status_concepts",
+          "tool_name": "get_location_status_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Location&field=status",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch location physical-type value set.",
+          "context_key": "location_physical_type_concepts",
+          "tool_name": "get_location_physical_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Location&field=physicalType",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch address-use value set.",
+          "context_key": "address_use_concepts",
+          "tool_name": "get_address_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=address.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch address-type value set.",
+          "context_key": "address_type_concepts",
+          "tool_name": "get_address_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=address.type",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": {
+        "schema": "org_location_create_form",
+        "mode": "create",
+        "prefill": false,
+        "editable": true
+      },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "create_location",
+          "tool_name": "create_location",
+          "url": "$fhir_server_url/api/fhir/v1/locations/",
+          "method": "POST",
+          "validation_schema": "location_create_schema",
+          "retryable": false,
+          "timeout_ms": 10000
+        }
+      ]
+    }
+  ]
+}

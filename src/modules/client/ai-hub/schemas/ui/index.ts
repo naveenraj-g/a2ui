@@ -14,6 +14,8 @@ import appointmentCreateForm from "./appointment_create_form.json";
 import appointmentPickPractitionerForm from "./appointment_pick_practitioner_form.json";
 import appointmentPickSlotForm from "./appointment_pick_slot_form.json";
 import appointmentConfirmBookingForm from "./appointment_confirm_booking_form.json";
+import orgCreateForm from "./org_create_form.json";
+import orgLocationCreateForm from "./org_location_create_form.json";
 
 /** Maps the workflow step's ui.schema name to the component tree JSON. */
 export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
@@ -33,4 +35,6 @@ export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
   appointment_pick_practitioner_form: appointmentPickPractitionerForm,
   appointment_pick_slot_form: appointmentPickSlotForm,
   appointment_confirm_booking_form: appointmentConfirmBookingForm,
+  org_create_form: orgCreateForm,
+  org_location_create_form: orgLocationCreateForm,
 };

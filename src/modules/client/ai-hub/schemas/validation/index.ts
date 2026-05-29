@@ -10,6 +10,8 @@ import { contactCreateSchema } from "./patient/contact_create_schema";
 import { gpCreateSchema } from "./patient/gp_create_schema";
 import { photoCreateSchema } from "./patient/photo_create_schema";
 import { linkCreateSchema } from "./patient/link_create_schema";
+import { organizationCreateSchema } from "./organization/organization_create_schema";
+import { locationCreateSchema } from "./organization/location_create_schema";
 
 /** Maps the workflow action's validation_schema key to the corresponding Zod schema. */
 export const VALIDATION_SCHEMAS: Record<string, z.ZodTypeAny> = {
@@ -24,4 +26,6 @@ export const VALIDATION_SCHEMAS: Record<string, z.ZodTypeAny> = {
   gp_create_schema: gpCreateSchema,
   photo_create_schema: photoCreateSchema,
   link_create_schema: linkCreateSchema,
+  organization_create_schema: organizationCreateSchema,
+  location_create_schema: locationCreateSchema,
 };
