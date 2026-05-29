@@ -42,19 +42,12 @@
           },
           {
             "id": "name_use",
-            "type": "MultipleChoice",
+            "type": "TerminologySelect",
             "properties": {
               "label": { "literalString": "Name Use (optional)" },
-              "placeholder": { "literalString": "Select name use" },
-              "items": [
-                { "label": { "literalString": "Usual" }, "value": "usual" },
-                { "label": { "literalString": "Official" }, "value": "official" },
-                { "label": { "literalString": "Temp" }, "value": "temp" },
-                { "label": { "literalString": "Nickname" }, "value": "nickname" },
-                { "label": { "literalString": "Anonymous" }, "value": "anonymous" },
-                { "label": { "literalString": "Old" }, "value": "old" },
-                { "label": { "literalString": "Maiden" }, "value": "maiden" }
-              ]
+              "placeholder": { "literalString": "Search name use…" },
+              "items": "$name_use_concepts.concepts",
+              "valueType": { "literalString": "code" }
             }
           },
           {
@@ -128,16 +121,12 @@
           },
           {
             "id": "gender",
-            "type": "MultipleChoice",
+            "type": "TerminologySelect",
             "properties": {
               "label": { "literalString": "Gender (optional)" },
-              "placeholder": { "literalString": "Select gender" },
-              "items": [
-                { "label": { "literalString": "Male" }, "value": "male" },
-                { "label": { "literalString": "Female" }, "value": "female" },
-                { "label": { "literalString": "Other" }, "value": "other" },
-                { "label": { "literalString": "Unknown" }, "value": "unknown" }
-              ]
+              "placeholder": { "literalString": "Search gender…" },
+              "items": "$gender_concepts.concepts",
+              "valueType": { "literalString": "code" }
             }
           },
           {
@@ -162,32 +151,24 @@
               "children": [
                 {
                   "id": "address_use",
-                  "type": "MultipleChoice",
+                  "type": "TerminologySelect",
                   "weight": 1,
                   "properties": {
                     "label": { "literalString": "Address Use" },
-                    "placeholder": { "literalString": "Select use" },
-                    "items": [
-                      { "label": { "literalString": "Home" }, "value": "home" },
-                      { "label": { "literalString": "Work" }, "value": "work" },
-                      { "label": { "literalString": "Temp" }, "value": "temp" },
-                      { "label": { "literalString": "Old" }, "value": "old" },
-                      { "label": { "literalString": "Billing" }, "value": "billing" }
-                    ]
+                    "placeholder": { "literalString": "Search address use…" },
+                    "items": "$address_use_concepts.concepts",
+                    "valueType": { "literalString": "code" }
                   }
                 },
                 {
                   "id": "address_type",
-                  "type": "MultipleChoice",
+                  "type": "TerminologySelect",
                   "weight": 1,
                   "properties": {
                     "label": { "literalString": "Address Type" },
-                    "placeholder": { "literalString": "Select type" },
-                    "items": [
-                      { "label": { "literalString": "Postal" }, "value": "postal" },
-                      { "label": { "literalString": "Physical" }, "value": "physical" },
-                      { "label": { "literalString": "Both" }, "value": "both" }
-                    ]
+                    "placeholder": { "literalString": "Search address type…" },
+                    "items": "$address_type_concepts.concepts",
+                    "valueType": { "literalString": "code" }
                   }
                 }
               ]

@@ -427,13 +427,47 @@
           }
         }
       },
-      "context_resolver": {
-        "description": "Confirm the Patient still exists before appending a contact.",
-        "tool_name": "get_patient_by_id",
-        "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
-        "method": "GET",
-        "timeout_ms": 10000
-      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the Patient still exists before appending a contact.",
+          "tool_name": "get_patient_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/patients/$patient_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch name-use value set for the Name Use select.",
+          "context_key": "name_use_concepts",
+          "tool_name": "get_name_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=name.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch administrative-gender value set for the Gender select.",
+          "context_key": "gender_concepts",
+          "tool_name": "get_gender_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=gender",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch address-use value set for the Address Use select.",
+          "context_key": "address_use_concepts",
+          "tool_name": "get_address_use_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=address.use",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch address-type value set for the Address Type select.",
+          "context_key": "address_type_concepts",
+          "tool_name": "get_address_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Patient&field=address.type",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
       "ui": {
         "schema": "patient_contact_form",
         "mode": "append",
