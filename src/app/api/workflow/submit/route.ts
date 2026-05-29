@@ -98,11 +98,13 @@ export async function POST(req: Request) {
     // Validate + transform the cleaned payload against the action's declared schema (if any).
     // Skip for iterate_key steps — validation and transform happen per-item inside the loop below.
     // Use result.data (not cleaned) so Zod transforms (e.g. building participant arrays) take effect.
+    // Merge sessionContext so multi-step schemas can access values from earlier steps (e.g. slot_id,
+    // practitioner_ref_id) that are not present in the current step's form fields alone.
     let payload: Record<string, unknown> = cleaned;
     if (action.validation_schema && !action.iterate_key) {
       const schema = VALIDATION_SCHEMAS[action.validation_schema];
       if (schema) {
-        const result = schema.safeParse(cleaned);
+        const result = schema.safeParse({ ...sessionContext, ...cleaned });
         if (!result.success) {
           const message = result.error.issues.map((i) => i.message).join("; ");
           return Response.json(

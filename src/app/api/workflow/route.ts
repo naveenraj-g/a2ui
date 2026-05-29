@@ -31,6 +31,7 @@ import {
   runContextResolvers,
   extractOutputs,
 } from "./_lib";
+import { getServerSession } from "@/modules/server/auth/get-session";
 
 // ** Testing **
 import create_patient_workflow from "@/modules/client/ai-hub/workflows/patient/create_patient.json";
@@ -56,7 +57,12 @@ export async function POST(req: Request) {
 
   try {
     // Fetch a fresh JWT so the agent can verify the caller's identity.
-    const token = await getJWTToken();
+    // Also read the session to seed user_id and org_id into context — the FHIR server
+    // expects these in the POST body (not derived from the JWT on the server side).
+    const [token, authSession] = await Promise.all([
+      getJWTToken(),
+      getServerSession(),
+    ]);
 
     // Ask the external agent which workflow matches the user's intent.
     // The agent returns a complete WorkflowDefinition JSON.
@@ -96,7 +102,15 @@ export async function POST(req: Request) {
     }
 
     let stepData: Record<string, unknown> = {};
-    let mergedContext = { ...sessionContext };
+    let mergedContext: Record<string, unknown> = {
+      ...sessionContext,
+      // Seed identity values so every workflow step can use $user_id / $org_id in
+      // URLs and validation schemas without asking the user to enter them manually.
+      ...(authSession?.user?.id ? { user_id: authSession.user.id } : {}),
+      ...(authSession?.session?.activeOrganizationId
+        ? { org_id: authSession.session.activeOrganizationId }
+        : {}),
+    };
 
     // Some steps need to pre-fetch a resource before showing the form.
     // context_resolvers (plural) runs multiple fetches in parallel;

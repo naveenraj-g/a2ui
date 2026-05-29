@@ -538,10 +538,14 @@ export interface DataSelectType {
   placeholder?: StringValue;
   /** Resolved array from context via $variable — any object shape. */
   items?: any;
-  /** Dot-path into each item for the primary display label (e.g. "practitioner_detail.name.text"). */
+  /** Dot-path into each item for the primary display label (e.g. "practitioner_detail.name.text"). Supports "path | formatter" syntax. */
   labelPath?: string;
-  /** Dot-path for an optional secondary description line (e.g. "specialty.0.coding_display"). */
+  /** Template string for the primary label combining multiple fields, e.g. "{start | time} – {end | time}". Takes precedence over labelPath when set. */
+  labelTemplate?: string;
+  /** Dot-path for an optional secondary description line (e.g. "specialty.0.coding_display"). Supports "path | formatter" syntax. */
   descriptionPath?: string;
+  /** Template string for the description combining multiple fields, e.g. "{start | short_date} · {comment}". Takes precedence over descriptionPath when set. */
+  descriptionTemplate?: string;
   /** On selection, writes hidden inputs {id}_{key} = item[path] for each entry. */
   emits?: DataSelectEmit[];
 }
@@ -549,6 +553,19 @@ export interface DataSelectType {
 export interface DataSelectNode extends BaseComponentNode {
   type: "DataSelect";
   properties: DataSelectType;
+}
+
+export interface SlotPickerType {
+  label?: StringValue;
+  /** Resolved array of slot objects from context (each must have id, start, end as ISO strings). */
+  items?: any;
+  /** On selection, writes hidden inputs {id}_{key} = item[path] for each entry — same contract as DataSelect.emits. */
+  emits?: DataSelectEmit[];
+}
+
+export interface SlotPickerNode extends BaseComponentNode {
+  type: "SlotPicker";
+  properties: SlotPickerType;
 }
 
 export interface SliderNode extends BaseComponentNode {
@@ -739,6 +756,7 @@ export type AnyComponentNode =
   | TerminologySelectNode
   | RepeatableGroupNode
   | DataSelectNode
+  | SlotPickerNode
   | IconNode
   | ImageNode
   | VideoNode

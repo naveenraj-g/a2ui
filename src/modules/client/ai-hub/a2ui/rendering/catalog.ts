@@ -41,6 +41,7 @@ import { DataTable } from "../catalog/data-table";
 import { TerminologySelect } from "../catalog/terminology-select";
 import { RepeatableGroup } from "../catalog/repeatable-group";
 import { DataSelect } from "../catalog/data-select";
+import { SlotPicker } from "../catalog/slot-picker";
 
 export type ComponentConfig = {
   component: React.ComponentType<any>;
@@ -94,4 +95,5 @@ export const DEFAULT_CATALOG: Catalog = {
   TerminologySelect: { component: TerminologySelect },
   RepeatableGroup: { component: RepeatableGroup },
   DataSelect: { component: DataSelect },
+  SlotPicker: { component: SlotPicker },
 };

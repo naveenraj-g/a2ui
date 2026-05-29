@@ -11,6 +11,9 @@ import patientLinkForm from "./patient_link_form.json";
 import vitalsDashboard from "./vitals_dashboard.json";
 import vitalsTable from "./vitals_table.json";
 import appointmentCreateForm from "./appointment_create_form.json";
+import appointmentPickPractitionerForm from "./appointment_pick_practitioner_form.json";
+import appointmentPickSlotForm from "./appointment_pick_slot_form.json";
+import appointmentConfirmBookingForm from "./appointment_confirm_booking_form.json";
 
 /** Maps the workflow step's ui.schema name to the component tree JSON. */
 export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
@@ -27,4 +30,7 @@ export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
   vitals_dashboard: vitalsDashboard,
   vitals_table: vitalsTable,
   appointment_create_form: appointmentCreateForm,
+  appointment_pick_practitioner_form: appointmentPickPractitionerForm,
+  appointment_pick_slot_form: appointmentPickSlotForm,
+  appointment_confirm_booking_form: appointmentConfirmBookingForm,
 };

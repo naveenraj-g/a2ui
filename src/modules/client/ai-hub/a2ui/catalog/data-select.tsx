@@ -38,6 +38,67 @@ function resolvePath(obj: unknown, path: string): unknown {
   }, obj);
 }
 
+/** Applies a named formatter to a resolved value. */
+function applyFormatter(value: unknown, formatter: string): string {
+  if (value === undefined || value === null) return "";
+  const raw = String(value);
+  switch (formatter.trim()) {
+    case "time": {
+      const d = new Date(raw);
+      return isNaN(d.getTime())
+        ? raw
+        : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    case "date": {
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? raw : d.toLocaleDateString();
+    }
+    case "short_date": {
+      const d = new Date(raw);
+      return isNaN(d.getTime())
+        ? raw
+        : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+    }
+    case "datetime": {
+      const d = new Date(raw);
+      return isNaN(d.getTime())
+        ? raw
+        : d.toLocaleString([], {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+    }
+    default:
+      return raw;
+  }
+}
+
+/**
+ * Resolves a single "path | formatter" expression against an item object.
+ * Falls back to the raw string value when no formatter is specified.
+ */
+function resolveField(obj: unknown, expr: string): string {
+  const pipeIdx = expr.indexOf("|");
+  if (pipeIdx === -1) {
+    return String(resolvePath(obj, expr.trim()) ?? "");
+  }
+  const path = expr.slice(0, pipeIdx).trim();
+  const formatter = expr.slice(pipeIdx + 1).trim();
+  return applyFormatter(resolvePath(obj, path), formatter);
+}
+
+/**
+ * Resolves a template string like "{start | time} – {end | time}, {start | short_date}"
+ * by replacing every `{path | formatter}` token with its formatted value.
+ * Falls back to plain path resolution when no `{...}` tokens are present.
+ */
+function resolveTemplate(obj: unknown, template: string): string {
+  return template.replace(/\{([^}]+)\}/g, (_, expr: string) => resolveField(obj, expr));
+}
+
 interface DataSelectProps {
   processor: IMessageProcessor;
   surfaceId: string;
@@ -67,28 +128,35 @@ export function DataSelect({
   const placeholder =
     (resolvePrimitive(component.properties.placeholder) as string | undefined) ?? "Select…";
   const labelPath = component.properties.labelPath ?? "";
+  const labelTemplate = component.properties.labelTemplate as string | undefined;
   const descriptionPath = component.properties.descriptionPath ?? "";
+  const descriptionTemplate = component.properties.descriptionTemplate as string | undefined;
   const emits = component.properties.emits ?? [];
 
   const rawItems = component.properties.items;
   const items: Record<string, unknown>[] = Array.isArray(rawItems) ? rawItems : [];
 
+  const getLabel = (item: Record<string, unknown>) =>
+    labelTemplate
+      ? resolveTemplate(item, labelTemplate)
+      : resolveField(item, labelPath) || "—";
+
+  const getDesc = (item: Record<string, unknown>) => {
+    if (descriptionTemplate) return resolveTemplate(item, descriptionTemplate);
+    if (descriptionPath) return resolveField(item, descriptionPath);
+    return "";
+  };
+
   const filteredItems = useMemo(() => {
     if (!search.trim()) return items;
     const q = search.toLowerCase();
     return items.filter((item) => {
-      const lbl = String(resolvePath(item, labelPath) ?? "").toLowerCase();
-      const desc = descriptionPath
-        ? String(resolvePath(item, descriptionPath) ?? "").toLowerCase()
-        : "";
+      const lbl = getLabel(item).toLowerCase();
+      const desc = getDesc(item).toLowerCase();
       return lbl.includes(q) || desc.includes(q);
     });
-  }, [items, search, labelPath, descriptionPath]);
-
-  const getLabel = (item: Record<string, unknown>) =>
-    String(resolvePath(item, labelPath) ?? "—");
-  const getDesc = (item: Record<string, unknown>) =>
-    descriptionPath ? String(resolvePath(item, descriptionPath) ?? "") : "";
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, search, labelPath, labelTemplate, descriptionPath, descriptionTemplate]);
 
   const fieldId = component.id;
   const triggerWidth = triggerRef.current?.offsetWidth;

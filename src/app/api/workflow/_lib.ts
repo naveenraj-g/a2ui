@@ -63,7 +63,24 @@ export function extractOutputs(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, def] of Object.entries(outputs)) {
-    result[key] = def.field ? response[def.field] : response;
+    if (!def.field) {
+      result[key] = response;
+    } else {
+      // Dot-notation path support: "me_patient.id" traverses nested objects.
+      // This lets context_resolvers and action responses share the same outputs
+      // map without colliding — resolver writes "foo.bar", action writes "baz".
+      const value = def.field.split(".").reduce<unknown>(
+        (acc, k) =>
+          acc != null && typeof acc === "object"
+            ? (acc as Record<string, unknown>)[k]
+            : undefined,
+        response,
+      );
+      // Skip undefined so an output absent from one response doesn't overwrite
+      // a value set by a different call (e.g. patient_id from resolver vs
+      // appointment_id from action — they coexist safely in sessionContext).
+      if (value !== undefined) result[key] = value;
+    }
   }
   return result;
 }
