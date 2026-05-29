@@ -1,0 +1,135 @@
+{
+  "id": "create_schedule_with_slots",
+  "name": "Create Schedule with Slots",
+  "description": "Set up a practitioner's availability schedule and add individual bookable time slots in two steps.",
+  "version": "1.0.0",
+  "tags": ["fhir", "schedule", "slot", "create", "scheduling"],
+  "llm_hints": {
+    "intent_examples": [
+      "Create a schedule",
+      "Set up a practitioner's schedule",
+      "Add appointment slots",
+      "Create time slots for a doctor",
+      "Set up availability for a practitioner"
+    ],
+    "when_to_use": [
+      "User wants to create a Schedule resource",
+      "User wants to add appointment slots for a practitioner",
+      "User wants to set up availability for booking"
+    ],
+    "when_not_to_use": [
+      "User wants to book an appointment (use book_appointment)",
+      "User wants to create a practitioner"
+    ],
+    "required_context": []
+  },
+  "execution": { "mode": "deterministic", "orchestrator": "nextjs", "audit_enabled": true },
+  "introduction": "I'll help you create a schedule and add bookable slots in 2 steps.",
+  "completion": { "message": "Schedule and slots created. Practitioners are now bookable.", "action": "dismiss" },
+  "workflow_steps": [
+    {
+      "sequence_number": 1,
+      "id": "create_schedule_resource",
+      "name": "Create Schedule",
+      "step_type": "form",
+      "description": "Define the planning horizon and link to a practitioner role.",
+      "context": {
+        "inputs": {},
+        "outputs": {
+          "schedule_id": { "type": "integer", "resource": "Schedule", "field": "id" }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Load practitioners available for booking.",
+          "context_key": "booking_practitioners",
+          "tool_name": "list_practitioners_for_booking",
+          "url": "$fhir_server_url/api/fhir/v1/practitioner-roles/booking",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch specialty value set.",
+          "context_key": "specialty_concepts",
+          "tool_name": "get_specialty_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Schedule&field=specialty",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch service-type value set.",
+          "context_key": "service_type_concepts",
+          "tool_name": "get_service_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Schedule&field=serviceType",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": { "schema": "schedule_create_form", "mode": "create", "prefill": false, "editable": true },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "create_schedule",
+          "tool_name": "create_schedule",
+          "url": "$fhir_server_url/api/fhir/v1/schedules/",
+          "method": "POST",
+          "validation_schema": "schedule_create_schema",
+          "retryable": false,
+          "timeout_ms": 10000
+        }
+      ]
+    },
+    {
+      "sequence_number": 2,
+      "id": "add_slots",
+      "name": "Add Slots",
+      "step_type": "form",
+      "description": "Add individual bookable time slots for this schedule.",
+      "context": {
+        "inputs": {
+          "schedule_id": { "type": "integer", "source": "workflow" }
+        },
+        "outputs": {}
+      },
+      "context_resolvers": [
+        {
+          "description": "Confirm the schedule exists.",
+          "tool_name": "get_schedule_by_id",
+          "url": "$fhir_server_url/api/fhir/v1/schedules/$schedule_id",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        {
+          "description": "Fetch slot-status value set.",
+          "context_key": "slot_status_concepts",
+          "tool_name": "get_slot_status_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Slot&field=status",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch appointment-type value set for slot classification.",
+          "context_key": "appointment_type_concepts",
+          "tool_name": "get_appointment_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=Slot&field=appointmentType",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": { "schema": "slot_create_form", "mode": "create", "prefill": false, "editable": true },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "create_slot",
+          "tool_name": "create_slot",
+          "url": "$fhir_server_url/api/fhir/v1/slots/",
+          "method": "POST",
+          "iterate_key": "slots",
+          "validation_schema": "slot_create_schema",
+          "retryable": false,
+          "timeout_ms": 10000
+        }
+      ]
+    }
+  ]
+}

@@ -135,7 +135,7 @@ export async function POST(req: Request) {
         if (action.validation_schema) {
           const schema = VALIDATION_SCHEMAS[action.validation_schema];
           if (schema) {
-            const result = schema.safeParse(item);
+            const result = schema.safeParse({ ...sessionContext, ...item });
             if (!result.success) {
               const message = result.error.issues.map((i) => i.message).join("; ");
               return Response.json({ success: false, error: message }, { status: 422 });

@@ -16,6 +16,16 @@ import appointmentPickSlotForm from "./appointment_pick_slot_form.json";
 import appointmentConfirmBookingForm from "./appointment_confirm_booking_form.json";
 import orgCreateForm from "./org_create_form.json";
 import orgLocationCreateForm from "./org_location_create_form.json";
+import healthcareServiceCreateForm from "./healthcare_service_create_form.json";
+import practitionerCreateForm from "./practitioner_create_form.json";
+import practitionerNameForm from "./practitioner_name_form.json";
+import practitionerIdentifierForm from "./practitioner_identifier_form.json";
+import practitionerTelecomForm from "./practitioner_telecom_form.json";
+import practitionerQualificationForm from "./practitioner_qualification_form.json";
+import practitionerCommunicationForm from "./practitioner_communication_form.json";
+import practitionerRoleCreateForm from "./practitioner_role_create_form.json";
+import scheduleCreateForm from "./schedule_create_form.json";
+import slotCreateForm from "./slot_create_form.json";
 
 /** Maps the workflow step's ui.schema name to the component tree JSON. */
 export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
@@ -37,4 +47,14 @@ export const UI_SCHEMA_REGISTRY: Record<string, unknown> = {
   appointment_confirm_booking_form: appointmentConfirmBookingForm,
   org_create_form: orgCreateForm,
   org_location_create_form: orgLocationCreateForm,
+  healthcare_service_create_form: healthcareServiceCreateForm,
+  practitioner_create_form: practitionerCreateForm,
+  practitioner_name_form: practitionerNameForm,
+  practitioner_identifier_form: practitionerIdentifierForm,
+  practitioner_telecom_form: practitionerTelecomForm,
+  practitioner_qualification_form: practitionerQualificationForm,
+  practitioner_communication_form: practitionerCommunicationForm,
+  practitioner_role_create_form: practitionerRoleCreateForm,
+  schedule_create_form: scheduleCreateForm,
+  slot_create_form: slotCreateForm,
 };

@@ -1,0 +1,192 @@
+{
+  "id": "practitioner-role-root",
+  "type": "Card",
+  "properties": {
+    "child": {
+      "id": "practitioner-role-form",
+      "type": "Form",
+      "properties": {
+        "action": { "name": "create_practitioner_role" },
+        "submitLabel": { "literalString": "Assign Role" },
+        "gap": "medium",
+        "alignment": "stretch",
+        "children": [
+          {
+            "id": "form-title",
+            "type": "Text",
+            "properties": { "text": { "literalString": "Step 7: Assign Role" }, "usageHint": "h2" }
+          },
+          {
+            "id": "form-subtitle",
+            "type": "Text",
+            "properties": { "text": { "literalString": "Link this practitioner to an organisation, location, and healthcare service, and define their role and specialty." }, "usageHint": "caption" }
+          },
+          { "id": "divider-top", "type": "Divider", "properties": {} },
+          {
+            "id": "section-role",
+            "type": "Text",
+            "properties": { "text": { "literalString": "Role & Specialty" }, "usageHint": "h4" }
+          },
+          {
+            "id": "role_code",
+            "type": "TerminologySelect",
+            "properties": {
+              "label": { "literalString": "Role (optional)" },
+              "placeholder": { "literalString": "Search role…" },
+              "items": "$role_code_concepts.concepts",
+              "valueType": { "literalString": "CodeableConcept" }
+            }
+          },
+          {
+            "id": "role_specialty",
+            "type": "TerminologySelect",
+            "properties": {
+              "label": { "literalString": "Specialty (optional)" },
+              "placeholder": { "literalString": "Search specialty…" },
+              "items": "$specialty_concepts.concepts",
+              "valueType": { "literalString": "CodeableConcept" }
+            }
+          },
+          {
+            "id": "role-active-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "active",
+                  "type": "CheckBox",
+                  "weight": 1,
+                  "properties": { "label": { "literalString": "Active" }, "value": { "literalBoolean": true } }
+                },
+                {
+                  "id": "period_start",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Period Start (optional)" },
+                    "placeholder": { "literalString": "YYYY-MM-DD" },
+                    "textFieldType": "date"
+                  }
+                },
+                {
+                  "id": "period_end",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Period End (optional)" },
+                    "placeholder": { "literalString": "YYYY-MM-DD" },
+                    "textFieldType": "date"
+                  }
+                }
+              ]
+            }
+          },
+          { "id": "divider-links", "type": "Divider", "properties": {} },
+          {
+            "id": "section-links",
+            "type": "Text",
+            "properties": { "text": { "literalString": "Organisation, Location & Service" }, "usageHint": "h4" }
+          },
+          {
+            "id": "role_org",
+            "type": "DataSelect",
+            "properties": {
+              "label": { "literalString": "Organisation (optional)" },
+              "placeholder": { "literalString": "Search organisation…" },
+              "items": "$my_organizations.data",
+              "labelField": "name",
+              "emits": [
+                { "key": "role_org_ref_id", "field": "id" },
+                { "key": "role_org_display", "field": "name" }
+              ]
+            }
+          },
+          {
+            "id": "role_location",
+            "type": "DataSelect",
+            "properties": {
+              "label": { "literalString": "Location (optional)" },
+              "placeholder": { "literalString": "Search location…" },
+              "items": "$my_locations.data",
+              "labelField": "name",
+              "emits": [
+                { "key": "role_location_ref_id", "field": "id" },
+                { "key": "role_location_display", "field": "name" }
+              ]
+            }
+          },
+          {
+            "id": "role_service",
+            "type": "DataSelect",
+            "properties": {
+              "label": { "literalString": "Healthcare Service (optional)" },
+              "placeholder": { "literalString": "Search service…" },
+              "items": "$my_healthcare_services.data",
+              "labelField": "name",
+              "emits": [
+                { "key": "svc_ref_id", "field": "id" },
+                { "key": "svc_display", "field": "name" }
+              ]
+            }
+          },
+          { "id": "divider-avail", "type": "Divider", "properties": {} },
+          {
+            "id": "section-avail",
+            "type": "Text",
+            "properties": { "text": { "literalString": "Availability (optional)" }, "usageHint": "h4" }
+          },
+          {
+            "id": "avail_days",
+            "type": "TextField",
+            "properties": {
+              "label": { "literalString": "Working Days (comma-separated)" },
+              "placeholder": { "literalString": "mon,tue,wed,thu,fri" },
+              "textFieldType": "shortText"
+            }
+          },
+          {
+            "id": "role-avail-times-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "avail_start",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Start Time" },
+                    "placeholder": { "literalString": "09:00:00" },
+                    "textFieldType": "shortText"
+                  }
+                },
+                {
+                  "id": "avail_end",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "End Time" },
+                    "placeholder": { "literalString": "17:00:00" },
+                    "textFieldType": "shortText"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "availability_exceptions",
+            "type": "TextField",
+            "properties": {
+              "label": { "literalString": "Availability Exceptions (optional)" },
+              "placeholder": { "literalString": "e.g. Not available on public holidays" },
+              "textFieldType": "longText"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

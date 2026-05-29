@@ -1,0 +1,98 @@
+{
+  "id": "create_healthcare_service",
+  "name": "Create Healthcare Service",
+  "description": "Register a new HealthcareService offered by an organisation at a location, including classification, specialty, and available hours.",
+  "version": "1.0.0",
+  "tags": ["fhir", "healthcare-service", "create", "crud"],
+  "llm_hints": {
+    "intent_examples": [
+      "Create a healthcare service",
+      "Add a new clinic service",
+      "Register a GP service",
+      "Set up a cardiology service",
+      "Add a new service to the organisation"
+    ],
+    "when_to_use": [
+      "User wants to create a new HealthcareService resource",
+      "User wants to register a service offered by a healthcare organisation"
+    ],
+    "when_not_to_use": [
+      "User wants to create a practitioner or organisation",
+      "User wants to book an appointment"
+    ],
+    "required_context": []
+  },
+  "execution": { "mode": "deterministic", "orchestrator": "nextjs", "audit_enabled": true },
+  "introduction": "I'll help you register a new healthcare service for your organisation.",
+  "completion": { "message": "Healthcare service created successfully.", "action": "dismiss" },
+  "workflow_steps": [
+    {
+      "sequence_number": 1,
+      "id": "create_healthcare_service_resource",
+      "name": "Create Healthcare Service",
+      "step_type": "form",
+      "description": "Enter service details, classification, location, and availability.",
+      "context": {
+        "inputs": {},
+        "outputs": {
+          "healthcare_service_id": { "type": "integer", "resource": "HealthcareService", "field": "id" }
+        }
+      },
+      "context_resolvers": [
+        {
+          "description": "Load the user's organisations for the 'Provided By' select.",
+          "context_key": "my_organizations",
+          "tool_name": "get_my_organizations",
+          "url": "$fhir_server_url/api/fhir/v1/organizations/me",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Load the user's locations for the Location select.",
+          "context_key": "my_locations",
+          "tool_name": "get_my_locations",
+          "url": "$fhir_server_url/api/fhir/v1/locations/me",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch service-category value set.",
+          "context_key": "service_category_concepts",
+          "tool_name": "get_service_category_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=HealthcareService&field=category",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch service-type value set.",
+          "context_key": "service_type_concepts",
+          "tool_name": "get_service_type_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=HealthcareService&field=type",
+          "method": "GET",
+          "timeout_ms": 8000
+        },
+        {
+          "description": "Fetch specialty value set.",
+          "context_key": "specialty_concepts",
+          "tool_name": "get_specialty_valueset",
+          "url": "$fhir_server_url/api/fhir/v1/terminology/concepts?resource=HealthcareService&field=specialty",
+          "method": "GET",
+          "timeout_ms": 8000
+        }
+      ],
+      "ui": { "schema": "healthcare_service_create_form", "mode": "create", "prefill": false, "editable": true },
+      "actions": [
+        {
+          "type": "http",
+          "purpose": "create_healthcare_service",
+          "tool_name": "create_healthcare_service",
+          "url": "$fhir_server_url/api/fhir/v1/healthcare-services/",
+          "method": "POST",
+          "validation_schema": "healthcare_service_create_schema",
+          "retryable": false,
+          "timeout_ms": 10000
+        }
+      ]
+    }
+  ]
+}
