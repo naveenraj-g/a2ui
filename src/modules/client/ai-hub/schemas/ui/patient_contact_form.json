@@ -41,7 +41,33 @@
             }
           },
           {
-            "id": "contact-name-row",
+            "id": "name_use",
+            "type": "MultipleChoice",
+            "properties": {
+              "label": { "literalString": "Name Use (optional)" },
+              "placeholder": { "literalString": "Select name use" },
+              "items": [
+                { "label": { "literalString": "Usual" }, "value": "usual" },
+                { "label": { "literalString": "Official" }, "value": "official" },
+                { "label": { "literalString": "Temp" }, "value": "temp" },
+                { "label": { "literalString": "Nickname" }, "value": "nickname" },
+                { "label": { "literalString": "Anonymous" }, "value": "anonymous" },
+                { "label": { "literalString": "Old" }, "value": "old" },
+                { "label": { "literalString": "Maiden" }, "value": "maiden" }
+              ]
+            }
+          },
+          {
+            "id": "name_text",
+            "type": "TextField",
+            "properties": {
+              "label": { "literalString": "Full Name (display, optional)" },
+              "placeholder": { "literalString": "e.g. Dr. Jane Smith" },
+              "textFieldType": "shortText"
+            }
+          },
+          {
+            "id": "contact-given-family-row",
             "type": "Row",
             "properties": {
               "gap": "medium",
@@ -71,6 +97,36 @@
             }
           },
           {
+            "id": "contact-prefix-suffix-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "name_prefix",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Prefix (optional)" },
+                    "placeholder": { "literalString": "e.g. Dr., Mr." },
+                    "textFieldType": "shortText"
+                  }
+                },
+                {
+                  "id": "name_suffix",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Suffix (optional)" },
+                    "placeholder": { "literalString": "e.g. Jr., MD" },
+                    "textFieldType": "shortText"
+                  }
+                }
+              ]
+            }
+          },
+          {
             "id": "gender",
             "type": "MultipleChoice",
             "properties": {
@@ -85,7 +141,7 @@
             }
           },
           {
-            "id": "divider-mid",
+            "id": "divider-address",
             "type": "Divider",
             "properties": {}
           },
@@ -95,6 +151,55 @@
             "properties": {
               "text": { "literalString": "Contact Address (optional)" },
               "usageHint": "h4"
+            }
+          },
+          {
+            "id": "contact-address-use-type-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "address_use",
+                  "type": "MultipleChoice",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Address Use" },
+                    "placeholder": { "literalString": "Select use" },
+                    "items": [
+                      { "label": { "literalString": "Home" }, "value": "home" },
+                      { "label": { "literalString": "Work" }, "value": "work" },
+                      { "label": { "literalString": "Temp" }, "value": "temp" },
+                      { "label": { "literalString": "Old" }, "value": "old" },
+                      { "label": { "literalString": "Billing" }, "value": "billing" }
+                    ]
+                  }
+                },
+                {
+                  "id": "address_type",
+                  "type": "MultipleChoice",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Address Type" },
+                    "placeholder": { "literalString": "Select type" },
+                    "items": [
+                      { "label": { "literalString": "Postal" }, "value": "postal" },
+                      { "label": { "literalString": "Physical" }, "value": "physical" },
+                      { "label": { "literalString": "Both" }, "value": "both" }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "address_text",
+            "type": "TextField",
+            "properties": {
+              "label": { "literalString": "Full Address (display, optional)" },
+              "placeholder": { "literalString": "e.g. 456 Oak Ave, Springfield, IL 62701" },
+              "textFieldType": "shortText"
             }
           },
           {
@@ -160,6 +265,58 @@
                   "properties": {
                     "label": { "literalString": "Country" },
                     "placeholder": { "literalString": "Country" },
+                    "textFieldType": "shortText"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "address_district",
+            "type": "TextField",
+            "properties": {
+              "label": { "literalString": "District / County (optional)" },
+              "placeholder": { "literalString": "e.g. Sangamon County" },
+              "textFieldType": "shortText"
+            }
+          },
+          {
+            "id": "divider-org",
+            "type": "Divider",
+            "properties": {}
+          },
+          {
+            "id": "section-org",
+            "type": "Text",
+            "properties": {
+              "text": { "literalString": "Responsible Organization (optional)" },
+              "usageHint": "h4"
+            }
+          },
+          {
+            "id": "contact-org-row",
+            "type": "Row",
+            "properties": {
+              "gap": "medium",
+              "alignment": "stretch",
+              "children": [
+                {
+                  "id": "organization",
+                  "type": "TextField",
+                  "weight": 1,
+                  "properties": {
+                    "label": { "literalString": "Organization Reference" },
+                    "placeholder": { "literalString": "e.g. Organization/100" },
+                    "textFieldType": "shortText"
+                  }
+                },
+                {
+                  "id": "organization_display",
+                  "type": "TextField",
+                  "weight": 2,
+                  "properties": {
+                    "label": { "literalString": "Organization Name (optional)" },
+                    "placeholder": { "literalString": "e.g. St. Mary's Hospital" },
                     "textFieldType": "shortText"
                   }
                 }

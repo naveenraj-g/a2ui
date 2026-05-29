@@ -83,6 +83,15 @@
                       }
                     ]
                   }
+                },
+                {
+                  "id": "language",
+                  "type": "TextField",
+                  "properties": {
+                    "label": { "literalString": "Language (optional)" },
+                    "placeholder": { "literalString": "BCP-47 code, e.g. en, fr" },
+                    "textFieldType": "shortText"
+                  }
                 }
               ]
             }
