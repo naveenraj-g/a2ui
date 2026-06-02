@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 const toOptionalStr = (v: unknown): string | undefined => {
-  if (!v || String(v) === "" || String(v) === "undefined" || String(v) === "null")
+  if (
+    !v ||
+    String(v) === "" ||
+    String(v) === "undefined" ||
+    String(v) === "null"
+  )
     return undefined;
   return String(v);
 };
@@ -32,25 +37,37 @@ const toOptionalFloat = (v: unknown): number | undefined => {
  * TerminologySelect id="status" valueType="code" → status
  * TerminologySelect id="intent" valueType="code" → intent
  */
-export const schema = z
+export const medicationRequestCreateSchema = z
   .object({
     // Identity — seeded from Better Auth session by route.ts
     user_id: z.preprocess(toOptionalStr, z.string().optional()),
     org_id: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Patient — resolved from me_patient context_resolver
-    patient_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    patient_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
     // Encounter — from session context
-    encounter_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    encounter_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
     // Condition — carried from Record Condition step in session context
-    condition_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    condition_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
 
     // Order classification
     status: z.string().min(1, "Status is required"),
     intent: z.string().min(1, "Intent is required"),
 
     // Formulary medication — DataSelect id="medication"
-    medication_ref_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    medication_ref_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
     medication_display: z.preprocess(toOptionalStr, z.string().optional()),
 
     // RxNorm code search — TerminologySelect CodeableConcept id="medication_code"
@@ -69,12 +86,21 @@ export const schema = z
     route_text: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Dispensing
-    dispense_quantity: z.preprocess(toOptionalFloat, z.number().positive().optional()),
+    dispense_quantity: z.preprocess(
+      toOptionalFloat,
+      z.number().positive().optional(),
+    ),
     dispense_unit: z.preprocess(toOptionalStr, z.string().optional()),
-    repeats: z.preprocess(toOptionalInt, z.number().int().nonnegative().optional()),
+    repeats: z.preprocess(
+      toOptionalInt,
+      z.number().int().nonnegative().optional(),
+    ),
 
     // Requester — DataSelect id="requester", emits key="ref_id" → requester_ref_id
-    requester_ref_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    requester_ref_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
 
     // Timing
     authored_on: z.preprocess(toOptionalStr, z.string().optional()),
@@ -102,7 +128,9 @@ export const schema = z
     encounter_id: d.encounter_id,
 
     // Requester reference
-    requester: d.requester_ref_id ? `Practitioner/${d.requester_ref_id}` : undefined,
+    requester: d.requester_ref_id
+      ? `Practitioner/${d.requester_ref_id}`
+      : undefined,
 
     // Authored on datetime
     authored_on: d.authored_on,
@@ -122,7 +150,9 @@ export const schema = z
 
     // Dispense request
     dispense_request:
-      d.dispense_quantity !== undefined || d.dispense_unit || d.repeats !== undefined
+      d.dispense_quantity !== undefined ||
+      d.dispense_unit ||
+      d.repeats !== undefined
         ? {
             quantity_value: d.dispense_quantity,
             quantity_unit: d.dispense_unit,

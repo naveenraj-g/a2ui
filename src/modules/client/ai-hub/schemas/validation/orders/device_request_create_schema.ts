@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 const toOptionalStr = (v: unknown): string | undefined => {
-  if (!v || String(v) === "" || String(v) === "undefined" || String(v) === "null")
+  if (
+    !v ||
+    String(v) === "" ||
+    String(v) === "undefined" ||
+    String(v) === "null"
+  )
     return undefined;
   return String(v);
 };
@@ -22,16 +27,22 @@ const toOptionalInt = (v: unknown): number | undefined => {
  * TerminologySelect id="intent" valueType="code" → intent
  * DataSelect id="requester" emits key="ref_id" → requester_ref_id
  */
-export const schema = z
+export const deviceRequestCreateSchema = z
   .object({
     // Identity — seeded from Better Auth session by route.ts
     user_id: z.preprocess(toOptionalStr, z.string().optional()),
     org_id: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Patient — resolved from me_patient context_resolver
-    patient_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    patient_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
     // Encounter — from session context
-    encounter_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    encounter_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
 
     // Order classification
     status: z.string().min(1, "Status is required"),
@@ -44,7 +55,10 @@ export const schema = z
     device_code_text: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Requester — DataSelect id="requester", emits key="ref_id" → requester_ref_id
-    requester_ref_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    requester_ref_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
 
     // Timing
     authored_on: z.preprocess(toOptionalStr, z.string().optional()),
@@ -70,7 +84,9 @@ export const schema = z
     encounter_id: d.encounter_id,
 
     // Requester reference
-    requester: d.requester_ref_id ? `Practitioner/${d.requester_ref_id}` : undefined,
+    requester: d.requester_ref_id
+      ? `Practitioner/${d.requester_ref_id}`
+      : undefined,
 
     // Authored on datetime
     authored_on: d.authored_on,

@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 const toOptionalStr = (v: unknown): string | undefined => {
-  if (!v || String(v) === "" || String(v) === "undefined" || String(v) === "null")
+  if (
+    !v ||
+    String(v) === "" ||
+    String(v) === "undefined" ||
+    String(v) === "null"
+  )
     return undefined;
   return String(v);
 };
@@ -42,16 +47,22 @@ const toOptionalBool = (v: unknown): boolean | undefined => {
  * DateTimeInput id="occurrence_datetime" → occurrence_datetime
  * DateTimeInput id="expiration_date" → expiration_date
  */
-export const schema = z
+export const immunizationCreateSchema = z
   .object({
     // Identity — seeded from Better Auth session by route.ts
     user_id: z.preprocess(toOptionalStr, z.string().optional()),
     org_id: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Patient — resolved from me_patient context_resolver
-    patient_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    patient_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
     // Encounter — from session context
-    encounter_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    encounter_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
 
     // Status (required)
     status: z.string().min(1, "Status is required"),
@@ -73,7 +84,10 @@ export const schema = z
     expiration_date: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Dose
-    dose_quantity_value: z.preprocess(toOptionalFloat, z.number().positive().optional()),
+    dose_quantity_value: z.preprocess(
+      toOptionalFloat,
+      z.number().positive().optional(),
+    ),
     dose_quantity_unit: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Injection site — TerminologySelect CodeableConcept id="site"
@@ -83,7 +97,10 @@ export const schema = z
     site_text: z.preprocess(toOptionalStr, z.string().optional()),
 
     // Performer — DataSelect id="performer", emits key="ref_id" → performer_ref_id
-    performer_ref_id: z.preprocess(toOptionalInt, z.number().int().positive().optional()),
+    performer_ref_id: z.preprocess(
+      toOptionalInt,
+      z.number().int().positive().optional(),
+    ),
   })
   .transform((d) => ({
     user_id: d.user_id,
