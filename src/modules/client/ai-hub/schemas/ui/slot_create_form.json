@@ -49,22 +49,22 @@
                     "children": [
                       {
                         "id": "start",
-                        "type": "TextField",
+                        "type": "DateTimeInput",
                         "weight": 1,
                         "properties": {
                           "label": { "literalString": "Start" },
-                          "placeholder": { "literalString": "2024-06-01T09:00:00Z" },
-                          "textFieldType": "shortText"
+                          "enableDate": true,
+                          "enableTime": true
                         }
                       },
                       {
                         "id": "end",
-                        "type": "TextField",
+                        "type": "DateTimeInput",
                         "weight": 1,
                         "properties": {
                           "label": { "literalString": "End" },
-                          "placeholder": { "literalString": "2024-06-01T09:30:00Z" },
-                          "textFieldType": "shortText"
+                          "enableDate": true,
+                          "enableTime": true
                         }
                       }
                     ]

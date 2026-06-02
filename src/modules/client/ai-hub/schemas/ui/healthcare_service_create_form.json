@@ -38,11 +38,7 @@
                   "id": "name",
                   "type": "TextField",
                   "weight": 3,
-                  "properties": {
-                    "label": { "literalString": "Service Name" },
-                    "placeholder": { "literalString": "e.g. General Practice Consultation" },
-                    "textFieldType": "shortText"
-                  }
+                  "properties": { "label": { "literalString": "Service Name" }, "placeholder": { "literalString": "e.g. General Practice Consultation" }, "textFieldType": "shortText" }
                 },
                 {
                   "id": "active",
@@ -61,11 +57,7 @@
           {
             "id": "comment",
             "type": "TextField",
-            "properties": {
-              "label": { "literalString": "Comment (optional)" },
-              "placeholder": { "literalString": "e.g. Walk-in and appointment-based service" },
-              "textFieldType": "longText"
-            }
+            "properties": { "label": { "literalString": "Comment (optional)" }, "placeholder": { "literalString": "e.g. Walk-in and appointment-based service" }, "textFieldType": "longText" }
           },
           { "id": "divider-class", "type": "Divider", "properties": {} },
           {
@@ -76,32 +68,17 @@
           {
             "id": "service_category",
             "type": "TerminologySelect",
-            "properties": {
-              "label": { "literalString": "Service Category (optional)" },
-              "placeholder": { "literalString": "Search category…" },
-              "items": "$service_category_concepts.concepts",
-              "valueType": { "literalString": "CodeableConcept" }
-            }
+            "properties": { "label": { "literalString": "Service Category (optional)" }, "placeholder": { "literalString": "Search category…" }, "items": "$service_category_concepts.concepts", "valueType": { "literalString": "CodeableConcept" } }
           },
           {
             "id": "service_type",
             "type": "TerminologySelect",
-            "properties": {
-              "label": { "literalString": "Service Type (optional)" },
-              "placeholder": { "literalString": "Search service type…" },
-              "items": "$service_type_concepts.concepts",
-              "valueType": { "literalString": "CodeableConcept" }
-            }
+            "properties": { "label": { "literalString": "Service Type (optional)" }, "placeholder": { "literalString": "Search service type…" }, "items": "$service_type_concepts.concepts", "valueType": { "literalString": "CodeableConcept" } }
           },
           {
             "id": "specialty",
             "type": "TerminologySelect",
-            "properties": {
-              "label": { "literalString": "Specialty (optional)" },
-              "placeholder": { "literalString": "Search specialty…" },
-              "items": "$specialty_concepts.concepts",
-              "valueType": { "literalString": "CodeableConcept" }
-            }
+            "properties": { "label": { "literalString": "Specialty (optional)" }, "placeholder": { "literalString": "Search specialty…" }, "items": "$specialty_concepts.concepts", "valueType": { "literalString": "CodeableConcept" } }
           },
           { "id": "divider-links", "type": "Divider", "properties": {} },
           {
@@ -110,30 +87,30 @@
             "properties": { "text": { "literalString": "Organisation & Location" }, "usageHint": "h4" }
           },
           {
-            "id": "provided_by",
+            "id": "org",
             "type": "DataSelect",
             "properties": {
               "label": { "literalString": "Provided By (Organisation)" },
               "placeholder": { "literalString": "Search organisation…" },
               "items": "$my_organizations.data",
-              "labelField": "name",
+              "labelPath": "name",
               "emits": [
-                { "key": "org_ref_id", "field": "id" },
-                { "key": "org_display", "field": "name" }
+                { "key": "ref_id", "path": "id" },
+                { "key": "display", "path": "name" }
               ]
             }
           },
           {
-            "id": "location_select",
+            "id": "location",
             "type": "DataSelect",
             "properties": {
               "label": { "literalString": "Location (optional)" },
               "placeholder": { "literalString": "Search location…" },
               "items": "$my_locations.data",
-              "labelField": "name",
+              "labelPath": "name",
               "emits": [
-                { "key": "location_ref_id", "field": "id" },
-                { "key": "location_display", "field": "name" }
+                { "key": "ref_id", "path": "id" },
+                { "key": "display", "path": "name" }
               ]
             }
           },
@@ -154,11 +131,7 @@
                 {
                   "id": "days",
                   "type": "TextField",
-                  "properties": {
-                    "label": { "literalString": "Days (comma-separated)" },
-                    "placeholder": { "literalString": "mon,tue,wed,thu,fri" },
-                    "textFieldType": "shortText"
-                  }
+                  "properties": { "label": { "literalString": "Days (comma-separated)" }, "placeholder": { "literalString": "mon,tue,wed,thu,fri" }, "textFieldType": "shortText" }
                 },
                 {
                   "id": "avail-times-row",
@@ -171,21 +144,13 @@
                         "id": "available_start_time",
                         "type": "TextField",
                         "weight": 1,
-                        "properties": {
-                          "label": { "literalString": "Opens" },
-                          "placeholder": { "literalString": "09:00:00" },
-                          "textFieldType": "shortText"
-                        }
+                        "properties": { "label": { "literalString": "Opens" }, "placeholder": { "literalString": "09:00:00" }, "textFieldType": "shortText" }
                       },
                       {
                         "id": "available_end_time",
                         "type": "TextField",
                         "weight": 1,
-                        "properties": {
-                          "label": { "literalString": "Closes" },
-                          "placeholder": { "literalString": "17:00:00" },
-                          "textFieldType": "shortText"
-                        }
+                        "properties": { "label": { "literalString": "Closes" }, "placeholder": { "literalString": "17:00:00" }, "textFieldType": "shortText" }
                       }
                     ]
                   }
@@ -196,11 +161,7 @@
           {
             "id": "availability_exceptions",
             "type": "TextField",
-            "properties": {
-              "label": { "literalString": "Availability Exceptions (optional)" },
-              "placeholder": { "literalString": "e.g. Closed on public holidays" },
-              "textFieldType": "longText"
-            }
+            "properties": { "label": { "literalString": "Availability Exceptions (optional)" }, "placeholder": { "literalString": "e.g. Closed on public holidays" }, "textFieldType": "longText" }
           }
         ]
       }

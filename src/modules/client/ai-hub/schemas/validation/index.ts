@@ -22,6 +22,32 @@ import { practitionerCommunicationCreateSchema } from "./practitioner/practition
 import { practitionerRoleCreateSchema } from "./practitioner/practitioner_role_create_schema";
 import { scheduleCreateSchema } from "./schedule/schedule_create_schema";
 import { slotCreateSchema } from "./schedule/slot_create_schema";
+import { relatedPersonCreateSchema } from "./related_person/related_person_create_schema";
+import { coverageCreateSchema } from "./coverage/coverage_create_schema";
+import { medicationCreateSchema } from "./medication/medication_create_schema";
+import { episodeOfCareCreateSchema } from "./encounter/episode_of_care_create_schema";
+import { encounterCreateSchema } from "./encounter/encounter_create_schema";
+import { encounterCloseSchema } from "./encounter/encounter_close_schema";
+import { allergyIntoleranceCreateSchema } from "./clinical/allergy_intolerance_create_schema";
+import { vitalsCreateSchema } from "./clinical/vitals_create_schema";
+import { observationCreateSchema } from "./clinical/observation_create_schema";
+import { conditionCreateSchema } from "./clinical/condition_create_schema";
+import { questionnaireResponseCreateSchema } from "./clinical/questionnaire_response_create_schema";
+import { serviceRequestCreateSchema } from "./orders/service_request_create_schema";
+import { medicationRequestCreateSchema } from "./orders/medication_request_create_schema";
+import { deviceRequestCreateSchema } from "./orders/device_request_create_schema";
+import { immunizationCreateSchema } from "./orders/immunization_create_schema";
+import { procedureCreateSchema } from "./clinical/procedure_create_schema";
+import { specimenCreateSchema } from "./clinical/specimen_create_schema";
+import { diagnosticReportCreateSchema } from "./results/diagnostic_report_create_schema";
+import { diagnosticReportObservationCreateSchema } from "./results/diagnostic_report_observation_create_schema";
+import { documentReferenceCreateSchema } from "./results/document_reference_create_schema";
+import { carePlanCreateSchema } from "./care/care_plan_create_schema";
+import { taskCreateSchema } from "./care/task_create_schema";
+import { claimCreateSchema } from "./billing/claim_create_schema";
+import { claimResponseCreateSchema } from "./billing/claim_response_create_schema";
+import { invoiceCreateSchema } from "./billing/invoice_create_schema";
+import { provenanceCreateSchema } from "./audit/provenance_create_schema";
 
 /** Maps the workflow action's validation_schema key to the corresponding Zod schema. */
 export const VALIDATION_SCHEMAS: Record<string, z.ZodTypeAny> = {
@@ -48,4 +74,30 @@ export const VALIDATION_SCHEMAS: Record<string, z.ZodTypeAny> = {
   practitioner_role_create_schema: practitionerRoleCreateSchema,
   schedule_create_schema: scheduleCreateSchema,
   slot_create_schema: slotCreateSchema,
+  related_person_create_schema: relatedPersonCreateSchema,
+  coverage_create_schema: coverageCreateSchema,
+  medication_create_schema: medicationCreateSchema,
+  episode_of_care_create_schema: episodeOfCareCreateSchema,
+  encounter_create_schema: encounterCreateSchema,
+  encounter_close_schema: encounterCloseSchema,
+  allergy_intolerance_create_schema: allergyIntoleranceCreateSchema,
+  vitals_create_schema: vitalsCreateSchema,
+  observation_create_schema: observationCreateSchema,
+  condition_create_schema: conditionCreateSchema,
+  questionnaire_response_create_schema: questionnaireResponseCreateSchema,
+  service_request_create_schema: serviceRequestCreateSchema,
+  medication_request_create_schema: medicationRequestCreateSchema,
+  device_request_create_schema: deviceRequestCreateSchema,
+  immunization_create_schema: immunizationCreateSchema,
+  procedure_create_schema: procedureCreateSchema,
+  specimen_create_schema: specimenCreateSchema,
+  diagnostic_report_create_schema: diagnosticReportCreateSchema,
+  diagnostic_report_observation_create_schema: diagnosticReportObservationCreateSchema,
+  document_reference_create_schema: documentReferenceCreateSchema,
+  care_plan_create_schema: carePlanCreateSchema,
+  task_create_schema: taskCreateSchema,
+  claim_create_schema: claimCreateSchema,
+  claim_response_create_schema: claimResponseCreateSchema,
+  invoice_create_schema: invoiceCreateSchema,
+  provenance_create_schema: provenanceCreateSchema,
 };

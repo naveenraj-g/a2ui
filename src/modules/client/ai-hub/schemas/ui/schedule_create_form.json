@@ -29,12 +29,11 @@
               "label": { "literalString": "Practitioner" },
               "placeholder": { "literalString": "Search practitioner…" },
               "items": "$booking_practitioners.data",
-              "labelField": "display",
-              "labelTemplate": "{display}",
-              "descriptionTemplate": "{specialty_display}",
+              "labelPath": "practitioner_detail.name.text",
+              "descriptionPath": "specialty.0.coding_display",
               "emits": [
-                { "key": "actor_role_id", "field": "role_id" },
-                { "key": "actor_display", "field": "display" }
+                { "key": "role_id", "path": "id" },
+                { "key": "display", "path": "practitioner_detail.name.text" }
               ]
             }
           },
@@ -53,23 +52,15 @@
                 },
                 {
                   "id": "planning_horizon_start",
-                  "type": "TextField",
+                  "type": "DateTimeInput",
                   "weight": 2,
-                  "properties": {
-                    "label": { "literalString": "Horizon Start" },
-                    "placeholder": { "literalString": "YYYY-MM-DD" },
-                    "textFieldType": "date"
-                  }
+                  "properties": { "label": { "literalString": "Horizon Start" }, "enableDate": true, "enableTime": true }
                 },
                 {
                   "id": "planning_horizon_end",
-                  "type": "TextField",
+                  "type": "DateTimeInput",
                   "weight": 2,
-                  "properties": {
-                    "label": { "literalString": "Horizon End" },
-                    "placeholder": { "literalString": "YYYY-MM-DD" },
-                    "textFieldType": "date"
-                  }
+                  "properties": { "label": { "literalString": "Horizon End" }, "enableDate": true, "enableTime": true }
                 }
               ]
             }
@@ -77,31 +68,17 @@
           {
             "id": "specialty",
             "type": "TerminologySelect",
-            "properties": {
-              "label": { "literalString": "Specialty (optional)" },
-              "placeholder": { "literalString": "Search specialty…" },
-              "items": "$specialty_concepts.concepts",
-              "valueType": { "literalString": "CodeableConcept" }
-            }
+            "properties": { "label": { "literalString": "Specialty (optional)" }, "placeholder": { "literalString": "Search specialty…" }, "items": "$specialty_concepts.concepts", "valueType": { "literalString": "CodeableConcept" } }
           },
           {
             "id": "service_type",
             "type": "TerminologySelect",
-            "properties": {
-              "label": { "literalString": "Service Type (optional)" },
-              "placeholder": { "literalString": "Search service type…" },
-              "items": "$service_type_concepts.concepts",
-              "valueType": { "literalString": "CodeableConcept" }
-            }
+            "properties": { "label": { "literalString": "Service Type (optional)" }, "placeholder": { "literalString": "Search service type…" }, "items": "$service_type_concepts.concepts", "valueType": { "literalString": "CodeableConcept" } }
           },
           {
             "id": "comment",
             "type": "TextField",
-            "properties": {
-              "label": { "literalString": "Comment (optional)" },
-              "placeholder": { "literalString": "e.g. Dr. Smith — Mon/Wed/Fri mornings" },
-              "textFieldType": "shortText"
-            }
+            "properties": { "label": { "literalString": "Comment (optional)" }, "placeholder": { "literalString": "e.g. Dr. Smith — Mon/Wed/Fri mornings" }, "textFieldType": "shortText" }
           }
         ]
       }

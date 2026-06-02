@@ -119,8 +119,12 @@ export interface MultipleChoice {
 }
 
 export interface TerminologySelectServerSearch {
-  resource: string;
-  field: string;
+  /** Mode A — field value set (small HL7 enums). Both required together. */
+  resource?: string;
+  field?: string;
+  /** Mode B — full-text search (LOINC / ICD-10 / SNOMED / RxNorm).
+   *  Canonical URL e.g. "http://loinc.org". Omit to search all systems. */
+  system?: string;
   minChars?: number;
   debounceMs?: number;
 }

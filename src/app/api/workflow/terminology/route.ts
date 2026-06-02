@@ -5,10 +5,17 @@
  * TerminologySelect component when server-side search is configured.
  * Injects the FHIR base URL and Bearer token so neither leaks to the client.
  *
- * Query params:
- *   resource  - FHIR resource name (e.g. "Patient")
- *   field     - resource field name (e.g. "maritalStatus")
- *   query     - free-text search term (forwarded as ?search=)
+ * Mode A — field concepts (small HL7 value sets):
+ *   resource  - FHIR resource name (e.g. "Condition")
+ *   field     - resource field name (e.g. "clinicalStatus")
+ *   query     - optional free-text filter within the value set
+ *
+ * Mode B — system search (LOINC, ICD-10, SNOMED CT, RxNorm):
+ *   system    - code system canonical URL (e.g. "http://loinc.org")
+ *               omit to search all loaded systems at once
+ *   query     - required free-text search term
+ *
+ * Both modes return: { concepts: ConceptResponse[] }
  */
 
 import { getJWTToken } from "@/modules/server/auth/jwt-token";
@@ -18,34 +25,55 @@ const FHIR_SERVER_URL = process.env.FHIR_SERVER_URL!;
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const resource = searchParams.get("resource");
-  const field = searchParams.get("field");
-  const query = searchParams.get("query") ?? "";
+  const field    = searchParams.get("field");
+  const system   = searchParams.get("system");
+  const query    = searchParams.get("query") ?? "";
 
-  if (!resource || !field) {
-    return Response.json({ error: "Missing resource or field" }, { status: 400 });
+  // Mode B: system-level full-text search (LOINC / ICD-10 / SNOMED / RxNorm)
+  const isSystemSearch = system !== null || (!resource && !field && query);
+
+  if (!isSystemSearch && (!resource || !field)) {
+    return Response.json(
+      { error: "Provide either (resource + field) or system" },
+      { status: 400 },
+    );
   }
 
   try {
     const token = await getJWTToken();
-    const params = new URLSearchParams({ resource, field });
-    if (query) params.set("search", query);
 
-    const res = await fetch(
-      `${FHIR_SERVER_URL}/api/fhir/v1/terminology/concepts?${params}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      },
-    );
+    let concepts: unknown[];
 
-    if (!res.ok) {
-      throw new Error(`Terminology API error: ${res.status}`);
+    if (isSystemSearch) {
+      const params = new URLSearchParams({ q: query, limit: "20" });
+      if (system) params.set("system", system);
+
+      const res = await fetch(
+        `${FHIR_SERVER_URL}/api/fhir/v1/terminology/search?${params}`,
+        { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+      );
+
+      if (!res.ok) throw new Error(`Terminology search error: ${res.status}`);
+      const data = await res.json();
+      // /terminology/search returns { data: [...] } — normalise to concepts
+      concepts = Array.isArray(data.data) ? data.data : [];
+    } else {
+      const params = new URLSearchParams({ resource: resource!, field: field! });
+      if (query) params.set("q", query);
+
+      const res = await fetch(
+        `${FHIR_SERVER_URL}/api/fhir/v1/terminology/concepts?${params}`,
+        { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+      );
+
+      if (!res.ok) throw new Error(`Terminology concepts error: ${res.status}`);
+      const data = await res.json();
+      concepts = Array.isArray(data.concepts) ? data.concepts : [];
     }
 
-    const data = await res.json();
-    return Response.json(data);
+    return Response.json({ concepts });
   } catch (error) {
-    console.error("[workflow/terminology] Failed to fetch concepts:", error);
+    console.error("[workflow/terminology] Failed:", error);
     return Response.json({ error: "Failed to fetch terminology" }, { status: 500 });
   }
 }

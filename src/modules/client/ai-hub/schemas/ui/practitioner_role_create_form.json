@@ -62,23 +62,15 @@
                 },
                 {
                   "id": "period_start",
-                  "type": "TextField",
+                  "type": "DateTimeInput",
                   "weight": 1,
-                  "properties": {
-                    "label": { "literalString": "Period Start (optional)" },
-                    "placeholder": { "literalString": "YYYY-MM-DD" },
-                    "textFieldType": "date"
-                  }
+                  "properties": { "label": { "literalString": "Period Start (optional)" }, "enableDate": true, "enableTime": false }
                 },
                 {
                   "id": "period_end",
-                  "type": "TextField",
+                  "type": "DateTimeInput",
                   "weight": 1,
-                  "properties": {
-                    "label": { "literalString": "Period End (optional)" },
-                    "placeholder": { "literalString": "YYYY-MM-DD" },
-                    "textFieldType": "date"
-                  }
+                  "properties": { "label": { "literalString": "Period End (optional)" }, "enableDate": true, "enableTime": false }
                 }
               ]
             }
@@ -96,10 +88,10 @@
               "label": { "literalString": "Organisation (optional)" },
               "placeholder": { "literalString": "Search organisation…" },
               "items": "$my_organizations.data",
-              "labelField": "name",
+              "labelPath": "name",
               "emits": [
-                { "key": "role_org_ref_id", "field": "id" },
-                { "key": "role_org_display", "field": "name" }
+                { "key": "ref_id", "path": "id" },
+                { "key": "display", "path": "name" }
               ]
             }
           },
@@ -110,24 +102,24 @@
               "label": { "literalString": "Location (optional)" },
               "placeholder": { "literalString": "Search location…" },
               "items": "$my_locations.data",
-              "labelField": "name",
+              "labelPath": "name",
               "emits": [
-                { "key": "role_location_ref_id", "field": "id" },
-                { "key": "role_location_display", "field": "name" }
+                { "key": "ref_id", "path": "id" },
+                { "key": "display", "path": "name" }
               ]
             }
           },
           {
-            "id": "role_service",
+            "id": "svc",
             "type": "DataSelect",
             "properties": {
               "label": { "literalString": "Healthcare Service (optional)" },
               "placeholder": { "literalString": "Search service…" },
               "items": "$my_healthcare_services.data",
-              "labelField": "name",
+              "labelPath": "name",
               "emits": [
-                { "key": "svc_ref_id", "field": "id" },
-                { "key": "svc_display", "field": "name" }
+                { "key": "ref_id", "path": "id" },
+                { "key": "display", "path": "name" }
               ]
             }
           },
@@ -157,21 +149,13 @@
                   "id": "avail_start",
                   "type": "TextField",
                   "weight": 1,
-                  "properties": {
-                    "label": { "literalString": "Start Time" },
-                    "placeholder": { "literalString": "09:00:00" },
-                    "textFieldType": "shortText"
-                  }
+                  "properties": { "label": { "literalString": "Start Time" }, "placeholder": { "literalString": "09:00:00" }, "textFieldType": "shortText" }
                 },
                 {
                   "id": "avail_end",
                   "type": "TextField",
                   "weight": 1,
-                  "properties": {
-                    "label": { "literalString": "End Time" },
-                    "placeholder": { "literalString": "17:00:00" },
-                    "textFieldType": "shortText"
-                  }
+                  "properties": { "label": { "literalString": "End Time" }, "placeholder": { "literalString": "17:00:00" }, "textFieldType": "shortText" }
                 }
               ]
             }

@@ -116,11 +116,15 @@ export function TerminologySelect({
       debounceRef.current = setTimeout(async () => {
         setIsSearching(true);
         try {
-          const params = new URLSearchParams({
-            resource: serverSearch.resource,
-            field: serverSearch.field,
-            query: value,
-          });
+          const params = new URLSearchParams({ query: value });
+          if (serverSearch.system !== undefined) {
+            // Mode B: system search (LOINC / ICD-10 / SNOMED / RxNorm)
+            if (serverSearch.system) params.set("system", serverSearch.system);
+          } else {
+            // Mode A: field value set
+            params.set("resource", serverSearch.resource ?? "");
+            params.set("field", serverSearch.field ?? "");
+          }
           const res = await fetch(`/api/workflow/terminology?${params}`);
           if (res.ok) {
             const data = await res.json();
